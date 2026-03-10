@@ -12,13 +12,13 @@ A cozy book club web application with an automated waitlist invitation system.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 19 + Vite + Tailwind CSS v4 |
-| Backend | Supabase (Postgres + Edge Functions + Storage) |
-| Email | Resend (with mock fallback) |
-| Icons | Lucide React |
-| Fonts | Playfair Display + Inter |
+| Layer    | Technology                                     |
+| -------- | ---------------------------------------------- |
+| Frontend | React 19 + Vite + Tailwind CSS v4              |
+| Backend  | Supabase (Postgres + Edge Functions + Storage) |
+| Email    | Resend (with mock fallback)                    |
+| Icons    | Lucide React                                   |
+| Fonts    | Playfair Display + Inter                       |
 
 ## Quick Start
 
@@ -43,26 +43,23 @@ npm run dev
 ### Edge Functions (Waitlist Engine)
 
 ```bash
-# Install Supabase CLI
-npm install -g supabase
-
-# Link your project
-supabase link --project-ref your-project-ref
+# Use Supabase CLI via npx (no global install needed)
+npx supabase@latest link --project-ref wzwzeylfwetlzscqafbx
 
 # Deploy functions
-supabase functions deploy send-monthly-invites
-supabase functions deploy handle-rsvp
-supabase functions deploy expire-invitations
+npx supabase@latest functions deploy send-monthly-invites
+npx supabase@latest functions deploy handle-rsvp
+npx supabase@latest functions deploy expire-invitations
 
 # Set secrets
-supabase secrets set RESEND_API_KEY=re_xxxxx
-supabase secrets set SITE_URL=https://underthelamp.club
+npx supabase@latest secrets set RESEND_API_KEY=re_xxxxx
+npx supabase@latest secrets set SITE_URL=https://underthelamp.club
 ```
 
 ### Cron Schedules (set in Supabase Dashboard)
 
-| Function | Schedule | Purpose |
-|----------|----------|---------|
+| Function             | Schedule    | Purpose                                         |
+| -------------------- | ----------- | ----------------------------------------------- |
 | `expire-invitations` | `0 * * * *` | Every hour — expires overdue invites & cascades |
 
 > `send-monthly-invites` is **not** on a cron — you trigger it manually from the Admin Dashboard whenever you're ready to start a new book month.

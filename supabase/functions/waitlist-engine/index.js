@@ -12,47 +12,48 @@
  */
 
 // ─── Configuration ───────────────────────────────────────────
-const INVITE_BATCH_SIZE = 4           // How many people to invite per month
-const RSVP_TIMEOUT_HOURS = 24        // Hours before an invite expires
-const SITE_URL = Deno.env.get('SITE_URL') || 'https://underthelamp.club'
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') || ''
-const FROM_EMAIL = 'Under the Lamp <hello@underthelamp.club>'
+const INVITE_BATCH_SIZE = 4; // How many people to invite per month
+const RSVP_TIMEOUT_HOURS = 24; // Hours before an invite expires
+const SITE_URL = Deno.env.get("SITE_URL") || "https://underthelamp.club";
+const RESEND_API_KEY =
+  Deno.env.get("re_JVL19u6r_PWemJp663cZegiHPSSKib79g") || "";
+const FROM_EMAIL = "Under the Lamp <https://underthelamp.club>";
 
 // ─── Supabase Client (server-side with service role key) ─────
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 function getSupabaseAdmin() {
   return createClient(
-    Deno.env.get('SUPABASE_URL'),
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  )
+    Deno.env.get("SUPABASE_URL"),
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  );
 }
 
 // ─── Email Service (Resend integration) ─────────────────────
 async function sendEmail({ to, subject, html }) {
   if (!RESEND_API_KEY) {
-    console.log(`[MOCK EMAIL] To: ${to}, Subject: ${subject}`)
-    console.log(`[MOCK EMAIL] Body preview: ${html.substring(0, 200)}...`)
-    return { success: true, mock: true }
+    console.log(`[MOCK EMAIL] To: ${to}, Subject: ${subject}`);
+    console.log(`[MOCK EMAIL] Body preview: ${html.substring(0, 200)}...`);
+    return { success: true, mock: true };
   }
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
-  })
+  });
 
-  return { success: res.ok, data: await res.json() }
+  return { success: res.ok, data: await res.json() };
 }
 
 // ─── Email Templates ────────────────────────────────────────
 function invitationEmailHtml(name, rsvpToken) {
-  const yesUrl = `${SITE_URL}/rsvp/${rsvpToken}?r=yes`
-  const noUrl = `${SITE_URL}/rsvp/${rsvpToken}?r=no`
-  const rsvpUrl = `${SITE_URL}/rsvp/${rsvpToken}`
+  const yesUrl = `${SITE_URL}/rsvp/${rsvpToken}?r=yes`;
+  const noUrl = `${SITE_URL}/rsvp/${rsvpToken}?r=no`;
+  const rsvpUrl = `${SITE_URL}/rsvp/${rsvpToken}`;
 
   return `
 <!DOCTYPE html>
@@ -90,7 +91,7 @@ function invitationEmailHtml(name, rsvpToken) {
     </p>
   </div>
 </body>
-</html>`
+</html>`;
 }
 
 function confirmationEmailHtml(name) {
@@ -122,7 +123,7 @@ function confirmationEmailHtml(name) {
     </p>
   </div>
 </body>
-</html>`
+</html>`;
 }
 
 // ─── Core Engine Functions ───────────────────────────────────
@@ -132,60 +133,70 @@ function confirmationEmailHtml(name) {
  * Triggered manually by the admin from the dashboard.
  */
 export async function sendMonthlyInvites() {
-  const supabase = getSupabaseAdmin()
-  const currentMonth = new Date().toISOString().slice(0, 7) + '-01' // e.g. "2026-03-01"
+  const supabase = getSupabaseAdmin();
+  const currentMonth = new Date().toISOString().slice(0, 7) + "-01"; // e.g. "2026-03-01"
 
   // Get the next people in line
   const { data: waiters, error } = await supabase
-    .from('waitlist')
-    .select('*')
-    .eq('status', 'waiting')
-    .order('position')
-    .limit(INVITE_BATCH_SIZE)
+    .from("waitlist")
+    .select("*")
+    .eq("status", "waiting")
+    .order("position")
+    .limit(INVITE_BATCH_SIZE);
 
   if (error || !waiters?.length) {
-    console.log('No one to invite:', error?.message || 'empty queue')
-    return { invited: 0 }
+    console.log("No one to invite:", error?.message || "empty queue");
+    return { invited: 0 };
   }
 
-  const results = []
+  const results = [];
 
   for (const person of waiters) {
-    const token = crypto.randomUUID()
-    const expiresAt = new Date(Date.now() + RSVP_TIMEOUT_HOURS * 60 * 60 * 1000)
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(
+      Date.now() + RSVP_TIMEOUT_HOURS * 60 * 60 * 1000,
+    );
 
     // Create invitation record
-    const { error: invError } = await supabase.from('invitations').insert({
+    const { error: invError } = await supabase.from("invitations").insert({
       waitlist_id: person.id,
       month: currentMonth,
       token,
-      status: 'pending',
+      status: "pending",
       expires_at: expiresAt.toISOString(),
-    })
+    });
 
     if (invError) {
-      console.error(`Failed to create invitation for ${person.email}:`, invError)
-      continue
+      console.error(
+        `Failed to create invitation for ${person.email}:`,
+        invError,
+      );
+      continue;
     }
 
     // Update waitlist status
     await supabase
-      .from('waitlist')
-      .update({ status: 'invited', invited_at: new Date().toISOString() })
-      .eq('id', person.id)
+      .from("waitlist")
+      .update({ status: "invited", invited_at: new Date().toISOString() })
+      .eq("id", person.id);
 
     // Send invitation email
     const emailResult = await sendEmail({
       to: person.email,
       subject: "You're invited to Under the Lamp! 🪔",
       html: invitationEmailHtml(person.name, token),
-    })
+    });
 
-    results.push({ name: person.name, email: person.email, token, emailResult })
+    results.push({
+      name: person.name,
+      email: person.email,
+      token,
+      emailResult,
+    });
   }
 
-  console.log(`Sent ${results.length} invitations`)
-  return { invited: results.length, results }
+  console.log(`Sent ${results.length} invitations`);
+  return { invited: results.length, results };
 }
 
 /**
@@ -193,87 +204,91 @@ export async function sendMonthlyInvites() {
  * If "no", automatically cascade to the next person.
  */
 export async function handleRSVP(token, response) {
-  const supabase = getSupabaseAdmin()
+  const supabase = getSupabaseAdmin();
 
   // Find the invitation
   const { data: invitation, error } = await supabase
-    .from('invitations')
-    .select('*, waitlist(*)')
-    .eq('token', token)
-    .single()
+    .from("invitations")
+    .select("*, waitlist(*)")
+    .eq("token", token)
+    .single();
 
   if (error || !invitation) {
-    return { error: 'Invalid invitation token' }
+    return { error: "Invalid invitation token" };
   }
 
-  if (invitation.status !== 'pending') {
-    return { error: 'This invitation has already been responded to' }
+  if (invitation.status !== "pending") {
+    return { error: "This invitation has already been responded to" };
   }
 
   if (new Date(invitation.expires_at) < new Date()) {
-    return { error: 'This invitation has expired' }
+    return { error: "This invitation has expired" };
   }
 
-  const newStatus = response === 'yes' ? 'accepted' : 'declined'
+  const newStatus = response === "yes" ? "accepted" : "declined";
 
   // Update invitation
   await supabase
-    .from('invitations')
+    .from("invitations")
     .update({ status: newStatus, responded_at: new Date().toISOString() })
-    .eq('id', invitation.id)
+    .eq("id", invitation.id);
 
   // Update waitlist entry
   await supabase
-    .from('waitlist')
+    .from("waitlist")
     .update({
       status: newStatus,
       responded_at: new Date().toISOString(),
     })
-    .eq('id', invitation.waitlist_id)
+    .eq("id", invitation.waitlist_id);
 
-  if (response === 'yes') {
+  if (response === "yes") {
     // Reset decline count on acceptance
     await supabase
-      .from('waitlist')
+      .from("waitlist")
       .update({ decline_count: 0 })
-      .eq('id', invitation.waitlist_id)
+      .eq("id", invitation.waitlist_id);
 
     // Send confirmation email
     await sendEmail({
       to: invitation.waitlist.email,
       subject: "Confirmed! See you under the lamp ✨",
       html: confirmationEmailHtml(invitation.waitlist.name),
-    })
+    });
 
-    return { status: 'accepted', name: invitation.waitlist.name }
+    return { status: "accepted", name: invitation.waitlist.name };
   } else {
     // Increment decline count
-    const newDeclineCount = (invitation.waitlist.decline_count || 0) + 1
-    const updates = { decline_count: newDeclineCount }
+    const newDeclineCount = (invitation.waitlist.decline_count || 0) + 1;
+    const updates = { decline_count: newDeclineCount };
 
     // Decline twice = moved down the list so others get a chance
     if (newDeclineCount >= 2) {
       // Get the last position in the queue
       const { data: lastEntry } = await supabase
-        .from('waitlist')
-        .select('position')
-        .order('position', { ascending: false })
+        .from("waitlist")
+        .select("position")
+        .order("position", { ascending: false })
         .limit(1)
-        .single()
+        .single();
 
-      updates.position = (lastEntry?.position || 0) + 1
-      updates.status = 'waiting'
-      updates.decline_count = 0 // reset after being moved down
+      updates.position = (lastEntry?.position || 0) + 1;
+      updates.status = "waiting";
+      updates.decline_count = 0; // reset after being moved down
 
       await supabase
-        .from('waitlist')
+        .from("waitlist")
         .update(updates)
-        .eq('id', invitation.waitlist_id)
+        .eq("id", invitation.waitlist_id);
     }
 
     // CASCADE: Invite the next person in line
-    await cascadeToNext(invitation.month)
-    return { status: 'declined', cascaded: true, movedDown: newDeclineCount >= 2 }
+    await cascadeToNext(invitation.month);
+    return {
+      status: "declined",
+      cascaded: true,
+      movedDown: newDeclineCount >= 2,
+    };
   }
 }
 
@@ -281,45 +296,47 @@ export async function handleRSVP(token, response) {
  * Cascade: invite the next waiting person for this month.
  */
 async function cascadeToNext(month) {
-  const supabase = getSupabaseAdmin()
+  const supabase = getSupabaseAdmin();
 
   // Find the next person who hasn't been invited yet
   const { data: nextPerson } = await supabase
-    .from('waitlist')
-    .select('*')
-    .eq('status', 'waiting')
-    .order('position')
+    .from("waitlist")
+    .select("*")
+    .eq("status", "waiting")
+    .order("position")
     .limit(1)
-    .single()
+    .single();
 
   if (!nextPerson) {
-    console.log('No more people in the queue to cascade to')
-    return
+    console.log("No more people in the queue to cascade to");
+    return;
   }
 
-  const token = crypto.randomUUID()
-  const expiresAt = new Date(Date.now() + RSVP_TIMEOUT_HOURS * 60 * 60 * 1000)
+  const token = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + RSVP_TIMEOUT_HOURS * 60 * 60 * 1000);
 
-  await supabase.from('invitations').insert({
+  await supabase.from("invitations").insert({
     waitlist_id: nextPerson.id,
     month,
     token,
-    status: 'pending',
+    status: "pending",
     expires_at: expiresAt.toISOString(),
-  })
+  });
 
   await supabase
-    .from('waitlist')
-    .update({ status: 'invited', invited_at: new Date().toISOString() })
-    .eq('id', nextPerson.id)
+    .from("waitlist")
+    .update({ status: "invited", invited_at: new Date().toISOString() })
+    .eq("id", nextPerson.id);
 
   await sendEmail({
     to: nextPerson.email,
     subject: "A spot just opened — you're invited! 🪔",
     html: invitationEmailHtml(nextPerson.name, token),
-  })
+  });
 
-  console.log(`Cascaded invitation to ${nextPerson.name} (${nextPerson.email})`)
+  console.log(
+    `Cascaded invitation to ${nextPerson.name} (${nextPerson.email})`,
+  );
 }
 
 /**
@@ -327,30 +344,30 @@ async function cascadeToNext(month) {
  * Should run every hour via cron.
  */
 export async function expireOverdueInvitations() {
-  const supabase = getSupabaseAdmin()
+  const supabase = getSupabaseAdmin();
 
   const { data: expired } = await supabase
-    .from('invitations')
-    .select('*, waitlist(*)')
-    .eq('status', 'pending')
-    .lt('expires_at', new Date().toISOString())
+    .from("invitations")
+    .select("*, waitlist(*)")
+    .eq("status", "pending")
+    .lt("expires_at", new Date().toISOString());
 
-  if (!expired?.length) return { expired: 0 }
+  if (!expired?.length) return { expired: 0 };
 
   for (const inv of expired) {
     await supabase
-      .from('invitations')
-      .update({ status: 'expired' })
-      .eq('id', inv.id)
+      .from("invitations")
+      .update({ status: "expired" })
+      .eq("id", inv.id);
 
     await supabase
-      .from('waitlist')
-      .update({ status: 'expired' })
-      .eq('id', inv.waitlist_id)
+      .from("waitlist")
+      .update({ status: "expired" })
+      .eq("id", inv.waitlist_id);
 
     // Cascade to next person
-    await cascadeToNext(inv.month)
+    await cascadeToNext(inv.month);
   }
 
-  return { expired: expired.length }
+  return { expired: expired.length };
 }
