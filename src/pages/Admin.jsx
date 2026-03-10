@@ -218,17 +218,19 @@ function WaitlistTab() {
 
     setSending(true);
     try {
-      // Call the Supabase Edge Function
+      console.log("[UTL] Invoking send-monthly-invites...");
       const { data, error } = await supabase.functions.invoke(
         "send-monthly-invites",
       );
+      console.log("[UTL] Response:", { data, error });
 
       if (error) throw error;
 
       await refreshWaitlist();
       alert(`✅ Sent ${data?.invited ?? 0} invitation(s)!`);
     } catch (err) {
-      alert(`❌ Error: ${err.message}`);
+      console.error("[UTL] Error:", err);
+      alert(`❌ Error: ${err.message || JSON.stringify(err)}`);
     } finally {
       setSending(false);
     }
