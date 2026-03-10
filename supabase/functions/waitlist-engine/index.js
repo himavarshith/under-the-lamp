@@ -217,7 +217,7 @@ export async function handleRSVP(token, response) {
     .from("invitations")
     .select("*, waitlist(*)")
     .eq("token", token)
-    .single();
+    .maybeSingle();
 
   if (error || !invitation) {
     return { error: "Invalid invitation token" };
