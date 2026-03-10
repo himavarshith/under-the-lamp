@@ -499,16 +499,20 @@ function PhotoUploadTab() {
 
           <label
             className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed
-                        rounded-xl cursor-pointer transition
+                        rounded-xl transition
                         ${
-                          selectedAlbum
-                            ? "border-lamp-300 hover:border-lamp-500 hover:bg-lamp-50/50"
+                          selectedAlbum && !uploading
+                            ? "border-lamp-300 hover:border-lamp-500 hover:bg-lamp-50/50 cursor-pointer"
                             : "border-warm-200 opacity-50 cursor-not-allowed"
                         }`}
           >
             <Camera className="w-8 h-8 text-warm-400 mb-2" />
             <p className="text-sm text-warm-500">
-              {uploading ? "Uploading..." : "Click to upload photos"}
+              {uploading
+                ? "Uploading..."
+                : selectedAlbum
+                  ? "Click to upload photos"
+                  : "Select an album first"}
             </p>
             <p className="text-xs text-warm-300 mt-1">
               PNG, JPG, WEBP up to 10MB each
@@ -517,8 +521,10 @@ function PhotoUploadTab() {
               type="file"
               multiple
               accept="image/*"
-              onChange={handleUpload}
-              disabled={!selectedAlbum || uploading}
+              onChange={(e) => {
+                if (!selectedAlbum || uploading) return;
+                handleUpload(e);
+              }}
               className="hidden"
             />
           </label>
