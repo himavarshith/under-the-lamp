@@ -1,0 +1,17 @@
+project_id = "wzwzeylfwetlzscqafbx"
+
+[functions.send-monthly-invites]
+verify_jwt = true
+entrypoint = './functions/send-monthly-invites/index.js'
+
+[functions.expire-invitations]
+verify_jwt = true
+entrypoint = './functions/expire-invitations/index.js'
+
+[functions.handle-rsvp]
+verify_jwt = true
+entrypoint = './functions/handle-rsvp/index.js'
+
+[functions.waitlist-engine]
+verify_jwt = true
+entrypoint = './functions/waitlist-engine/index.js'
