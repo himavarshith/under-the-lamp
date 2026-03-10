@@ -14,10 +14,9 @@ Deno.serve(async (req) => {
   }
 
   // Verify this is called by the Supabase scheduler or an admin
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
+      status: 405,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
