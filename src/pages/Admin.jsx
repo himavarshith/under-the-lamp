@@ -195,11 +195,20 @@ function WaitlistTab() {
   };
 
   const triggerInvite = async (item) => {
-    // In production, this calls the Supabase Edge Function
-    alert(`📧 Invitation email would be sent to ${item.name} (${item.email})`);
-    setWaitlist(
-      waitlist.map((w) => (w.id === item.id ? { ...w, status: "invited" } : w)),
-    );
+    if (!confirm(`Send invitation to ${item.name} (${item.email})?`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "send-monthly-invites",
+        {
+          body: { waitlistId: item.id },
+        },
+      );
+      if (error) throw error;
+      await refreshWaitlist();
+      alert(`✅ Invitation sent to ${item.name}!`);
+    } catch (err) {
+      alert(`❌ Error: ${err.message || JSON.stringify(err)}`);
+    }
   };
 
   const [sending, setSending] = useState(false);

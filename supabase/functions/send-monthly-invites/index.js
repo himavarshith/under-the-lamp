@@ -1,9 +1,3 @@
-/**
- * Supabase Edge Function: Send Invites (Manual Trigger)
- *
- * Deploy with: supabase functions deploy send-monthly-invites
- * Triggered manually from the Admin Dashboard — no cron schedule.
- */
 import { sendMonthlyInvites } from "../waitlist-engine/index.js";
 
 const corsHeaders = {
@@ -28,7 +22,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const result = await sendMonthlyInvites();
+    let body = {};
+    try {
+      body = await req.json();
+    } catch (_) {}
+    const result = await sendMonthlyInvites({ waitlistId: body.waitlistId });
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },

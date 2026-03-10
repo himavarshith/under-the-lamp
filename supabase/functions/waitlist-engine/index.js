@@ -131,17 +131,24 @@ function confirmationEmailHtml(name) {
  * Send invitations to the top N people on the waitlist.
  * Triggered manually by the admin from the dashboard.
  */
-export async function sendMonthlyInvites() {
+export async function sendMonthlyInvites({ waitlistId } = {}) {
   const supabase = getSupabaseAdmin();
   const currentMonth = new Date().toISOString().slice(0, 7) + "-01"; // e.g. "2026-03-01"
 
-  // Get the next people in line
-  const { data: waiters, error } = await supabase
+  // Get specific person or next batch in line
+  let query = supabase
     .from("waitlist")
     .select("*")
     .eq("status", "waiting")
-    .order("position")
-    .limit(INVITE_BATCH_SIZE);
+    .order("position");
+
+  if (waitlistId) {
+    query = query.eq("id", waitlistId).limit(1);
+  } else {
+    query = query.limit(INVITE_BATCH_SIZE);
+  }
+
+  const { data: waiters, error } = await query;
 
   if (error || !waiters?.length) {
     console.log("No one to invite:", error?.message || "empty queue");
