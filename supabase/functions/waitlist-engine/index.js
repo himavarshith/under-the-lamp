@@ -15,9 +15,8 @@
 const INVITE_BATCH_SIZE = 4; // How many people to invite per month
 const RSVP_TIMEOUT_HOURS = 24; // Hours before an invite expires
 const SITE_URL = Deno.env.get("SITE_URL") || "https://underthelamp.club";
-const RESEND_API_KEY =
-  Deno.env.get("re_JVL19u6r_PWemJp663cZegiHPSSKib79g") || "";
-const FROM_EMAIL = "Under the Lamp <https://underthelamp.club>";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const FROM_EMAIL = "Under the Lamp <hello@underthelamp.club>";
 
 // ─── Supabase Client (server-side with service role key) ─────
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
