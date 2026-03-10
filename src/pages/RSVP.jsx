@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseUrl } from "../lib/supabase";
 import { CheckCircle, XCircle, Lamp, Loader2, Clock } from "lucide-react";
 
 export default function RSVP() {
@@ -39,10 +39,14 @@ export default function RSVP() {
   const respond = async (response) => {
     setStatus("loading");
     try {
-      const { error } = await supabase.functions.invoke("handle-rsvp", {
-        body: { token, response },
+      const res = await fetch(`${supabaseUrl}/functions/v1/handle-rsvp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, response }),
       });
-      if (error) throw error;
+      const data = await res.json();
+      if (!res.ok || data.error)
+        throw new Error(data.error || "Failed to submit RSVP");
       setStatus(response === "yes" ? "accepted" : "declined");
     } catch (err) {
       console.error("RSVP Error:", err);

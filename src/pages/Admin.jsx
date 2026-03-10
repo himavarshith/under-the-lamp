@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseUrl } from "../lib/supabase";
 import {
   Shield,
   Users,
@@ -197,13 +197,16 @@ function WaitlistTab() {
   const triggerInvite = async (item) => {
     if (!confirm(`Send invitation to ${item.name} (${item.email})?`)) return;
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "send-monthly-invites",
+      const res = await fetch(
+        `${supabaseUrl}/functions/v1/send-monthly-invites`,
         {
-          body: { waitlistId: item.id },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ waitlistId: item.id }),
         },
       );
-      if (error) throw error;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
       await refreshWaitlist();
       alert(`✅ Invitation sent to ${item.name}!`);
     } catch (err) {
@@ -228,13 +231,15 @@ function WaitlistTab() {
     setSending(true);
     try {
       console.log("[UTL] Invoking send-monthly-invites...");
-      const { data, error } = await supabase.functions.invoke(
-        "send-monthly-invites",
+      const res = await fetch(
+        `${supabaseUrl}/functions/v1/send-monthly-invites`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
       );
-      console.log("[UTL] Response:", { data, error });
-
-      if (error) throw error;
-
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
       await refreshWaitlist();
       alert(`✅ Sent ${data?.invited ?? 0} invitation(s)!`);
     } catch (err) {
