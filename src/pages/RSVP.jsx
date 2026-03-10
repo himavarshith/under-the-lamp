@@ -38,26 +38,16 @@ export default function RSVP() {
 
   const respond = async (response) => {
     setStatus("loading");
-    const newStatus = response === "yes" ? "accepted" : "declined";
-
-    // Update invitation
-    await supabase
-      .from("invitations")
-      .update({ status: newStatus, responded_at: new Date().toISOString() })
-      .eq("token", token);
-
-    // Update waitlist entry
-    if (invitation?.waitlist_id) {
-      await supabase
-        .from("waitlist")
-        .update({
-          status: newStatus,
-          responded_at: new Date().toISOString(),
-        })
-        .eq("id", invitation.waitlist_id);
+    try {
+      const { error } = await supabase.functions.invoke("handle-rsvp", {
+        body: { token, response },
+      });
+      if (error) throw error;
+      setStatus(response === "yes" ? "accepted" : "declined");
+    } catch (err) {
+      console.error("RSVP Error:", err);
+      setStatus("error");
     }
-
-    setStatus(newStatus);
 
     // If declined, the edge function cascade handler will pick up the next person
   };
