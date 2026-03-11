@@ -56,13 +56,13 @@ export default function BookOfTheMonth() {
 
         {/* Book Info */}
         <div className="flex-1">
-          <h3 className="font-display text-3xl text-lime mb-2 uppercase font-extrabold tracking-tight">
+          <h3 className="font-display text-3xl text-lime mb-1">
             {display.title}
           </h3>
-          <p className="text-parchment/50 text-sm mb-4 font-serif italic">
+          <p className="text-parchment/50 text-sm mb-4 font-sans">
             by {display.author}
           </p>
-          <p className="text-parchment/70 leading-relaxed font-serif italic">
+          <p className="text-parchment/70 leading-relaxed font-sans">
             {display.description}
           </p>
         </div>

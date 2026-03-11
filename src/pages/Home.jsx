@@ -25,7 +25,7 @@ export default function Home() {
             book club
           </p>
 
-          <p className="text-parchment/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-serif italic">
+          <p className="text-parchment/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-sans">
             A discussion-driven book club where readers meet once a month to
             dive deep into great stories. One book, one lamp, one conversation
             at a time.
@@ -86,7 +86,7 @@ export default function Home() {
       <section id="join" className="bg-lavender/30 py-20">
         <div className="max-w-md mx-auto px-4">
           <div className="text-center mb-8">
-            <h2 className="font-display text-3xl mb-3 uppercase font-bold">
+            <h2 className="font-serif italic text-3xl mb-3 text-brand-blue">
               Join the Waitlist
             </h2>
             <p className="text-carbon-muted text-sm font-sans">
@@ -94,7 +94,7 @@ export default function Home() {
               soon. Add your name and we'll reach out as soon as a spot opens
               up.
             </p>
-            <p className="text-carbon-muted/70 text-xs mt-2 font-sans">
+            <p className="text-carbon-muted/70 text-xs mt-2 font-sans leading-relaxed">
               If you're invited but can't attend, just let us know — you'll stay
               on the list. Decline twice and we'll move you down so others get a
               chance too.
