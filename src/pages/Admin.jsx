@@ -514,7 +514,10 @@ function PhotoUploadTab() {
           <Plus className="w-4 h-4 text-lamp-500" />
           Create Album
         </h3>
-        <form onSubmit={createAlbum} className="flex gap-3">
+        <form
+          onSubmit={createAlbum}
+          className="flex flex-col sm:flex-row gap-3"
+        >
           <input
             type="text"
             value={newAlbumTitle}
@@ -526,11 +529,11 @@ function PhotoUploadTab() {
             type="month"
             value={newAlbumMonth}
             onChange={(e) => setNewAlbumMonth(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
+            className="w-full sm:w-auto px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
           />
           <button
             type="submit"
-            className="bg-lamp-500 hover:bg-lamp-600 text-white text-sm px-4 py-2 rounded-lg transition"
+            className="w-full sm:w-auto bg-lamp-500 hover:bg-lamp-600 text-white text-sm px-4 py-2 rounded-lg transition"
           >
             Create
           </button>
@@ -618,35 +621,41 @@ function PhotoUploadTab() {
           )}
 
           {/* Photos in selected album */}
-          {selectedAlbum && photosMap[selectedAlbum] && (
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {photosMap[selectedAlbum].map((photo) => (
-                <div
-                  key={photo.id}
-                  className="relative group rounded-lg overflow-hidden bg-warm-100"
-                >
-                  <img
-                    src={photo.url}
-                    alt={photo.caption}
-                    className="w-full h-24 object-cover"
-                  />
-                  <button
-                    onClick={() => deletePhoto(photo)}
-                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1
-                               opacity-0 group-hover:opacity-100 transition"
-                    title="Delete photo"
+          {selectedAlbum &&
+            photosMap[selectedAlbum] &&
+            (photosMap[selectedAlbum].length === 0 ? (
+              <p className="text-warm-400 text-sm text-center py-4">
+                No photos in this album yet.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                {photosMap[selectedAlbum].map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="relative group rounded-lg overflow-hidden bg-warm-100"
                   >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                  {photo.caption && (
-                    <p className="text-xs text-warm-500 px-1 py-0.5 truncate">
-                      {photo.caption}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                    <img
+                      src={photo.url}
+                      alt={photo.caption}
+                      className="w-full aspect-square object-cover"
+                    />
+                    <button
+                      onClick={() => deletePhoto(photo)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5
+                               opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
+                      title="Delete photo"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                    {photo.caption && (
+                      <p className="text-xs text-warm-500 px-1.5 py-1 truncate">
+                        {photo.caption}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
         </div>
       </div>
     </div>
