@@ -17,6 +17,9 @@ const RSVP_TIMEOUT_HOURS = 24; // Hours before an invite expires
 const SITE_URL = Deno.env.get("SITE_URL") || "https://underthelamp.club";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_EMAIL = "Under the Lamp <hello@underthelamp.club>";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const TWILIO_WHATSAPP_FROM = Deno.env.get("TWILIO_WHATSAPP_FROM") || "";
 
 // ─── Supabase Client (server-side with service role key) ─────
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -48,6 +51,41 @@ async function sendEmail({ to, subject, html }) {
   return { success: res.ok, data: await res.json() };
 }
 
+// ─── WhatsApp Service (Twilio) ───────────────────────────────
+async function sendWhatsApp({ to, body }) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_WHATSAPP_FROM) {
+    console.log(
+      `[MOCK WHATSAPP] To: ${to}, Body: ${body.substring(0, 100)}...`,
+    );
+    return { success: true, mock: true };
+  }
+
+  // Normalize phone: ensure it starts with +
+  const toNumber = to.startsWith("+") ? to : `+${to}`;
+
+  const params = new URLSearchParams({
+    From: `whatsapp:${TWILIO_WHATSAPP_FROM}`,
+    To: `whatsapp:${toNumber}`,
+    Body: body,
+  });
+
+  const res = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params.toString(),
+    },
+  );
+
+  const data = await res.json();
+  if (!res.ok) console.error("[WHATSAPP ERROR]", data);
+  return { success: res.ok, data };
+}
+
 // ─── Email Templates ────────────────────────────────────────
 function invitationEmailHtml(name, rsvpToken) {
   const yesUrl = `${SITE_URL}/rsvp/${rsvpToken}?r=yes`;
@@ -58,36 +96,42 @@ function invitationEmailHtml(name, rsvpToken) {
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;font-family:'Georgia',serif;background-color:#FAF5F0;">
-  <div style="max-width:520px;margin:40px auto;padding:40px;background:white;border-radius:16px;">
-    <div style="text-align:center;margin-bottom:32px;">
-      <div style="font-size:32px;margin-bottom:8px;">🪔</div>
-      <h1 style="font-size:24px;color:#3F2A18;margin:0;">Under the Lamp</h1>
-      <p style="color:#9A7548;font-size:13px;margin-top:4px;">Book Club</p>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#EFEDEB;">
+  <div style="max-width:520px;margin:40px auto;padding:0 16px;">
+    <!-- Header -->
+    <div style="background-color:#191B14;border-radius:16px 16px 0 0;padding:32px;text-align:center;">
+      <h1 style="font-size:28px;color:#D3F486;margin:0;letter-spacing:3px;text-transform:uppercase;font-weight:800;">Under the Lamp</h1>
+      <p style="color:#EFEDEB;font-size:15px;margin-top:6px;font-style:italic;">book club</p>
     </div>
 
-    <p style="color:#3F2A18;font-size:16px;line-height:1.6;">
-      Hi <strong>${name}</strong>,
-    </p>
-    <p style="color:#5E4328;font-size:15px;line-height:1.6;">
-      Great news — a spot has opened up at our next book club gathering!
-      We'd love to have you join us under the lamp.
-    </p>
+    <!-- Body -->
+    <div style="background:white;padding:40px;border-left:1px solid #DDD9D5;border-right:1px solid #DDD9D5;">
+      <p style="color:#191B14;font-size:16px;line-height:1.6;margin-top:0;">
+        Hi <strong>${name}</strong>,
+      </p>
+      <p style="color:#555850;font-size:15px;line-height:1.6;">
+        Great news — a spot has opened up at our next book club gathering!
+        We'd love to have you join us under the lamp.
+      </p>
 
-    <div style="text-align:center;margin:32px 0;">
-      <a href="${rsvpUrl}" style="display:inline-block;background-color:#F59E0B;color:white;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;">
-        RSVP Now
-      </a>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${rsvpUrl}" style="display:inline-block;background-color:#D3F486;color:#191B14;padding:14px 36px;border-radius:12px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:1px;text-transform:uppercase;">
+          RSVP Now
+        </a>
+      </div>
+
+      <p style="color:#555850;font-size:13px;line-height:1.6;text-align:center;background:#CEEEFF;border-radius:8px;padding:12px;">
+        ⚠️ Your browser may warn that this link looks unusual — that's normal.<br>
+        The link is unique to you and is safe to open. It comes from <strong>underthelamp.club</strong>.
+      </p>
+
+      <p style="color:#555850;font-size:13px;text-align:center;margin-top:16px;">⏳ This invitation expires in 24 hours.</p>
     </div>
 
-    <p style="color:#9A7548;font-size:13px;text-align:center;">
-      ⏳ This invitation expires in 24 hours.
-    </p>
-
-    <hr style="border:none;border-top:1px solid #F0E6D8;margin:24px 0;">
-    <p style="color:#C6A478;font-size:12px;text-align:center;">
-      Under the Lamp Book Club · One book, one lamp, one story at a time.
-    </p>
+    <!-- Footer -->
+    <div style="background-color:#191B14;border-radius:0 0 16px 16px;padding:20px;text-align:center;">
+      <p style="color:#EFEDEB;font-size:11px;margin:0;letter-spacing:2px;text-transform:uppercase;">Under the Lamp Book Club &middot; One book, one lamp, one story at a time.</p>
+    </div>
   </div>
 </body>
 </html>`;
@@ -98,28 +142,37 @@ function confirmationEmailHtml(name) {
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;font-family:'Georgia',serif;background-color:#FAF5F0;">
-  <div style="max-width:520px;margin:40px auto;padding:40px;background:white;border-radius:16px;">
-    <div style="text-align:center;margin-bottom:32px;">
-      <div style="font-size:32px;margin-bottom:8px;">✨</div>
-      <h1 style="font-size:24px;color:#3F2A18;margin:0;">You're In!</h1>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#EFEDEB;">
+  <div style="max-width:520px;margin:40px auto;padding:0 16px;">
+    <!-- Header -->
+    <div style="background-color:#191B14;border-radius:16px 16px 0 0;padding:32px;text-align:center;">
+      <h1 style="font-size:28px;color:#D3F486;margin:0;letter-spacing:3px;text-transform:uppercase;font-weight:800;">Under the Lamp</h1>
+      <p style="color:#EFEDEB;font-size:15px;margin-top:6px;font-style:italic;">book club</p>
     </div>
 
-    <p style="color:#3F2A18;font-size:16px;line-height:1.6;">
-      Hi <strong>${name}</strong>,
-    </p>
-    <p style="color:#5E4328;font-size:15px;line-height:1.6;">
-      Your spot is confirmed for this month's gathering. We'll send you the
-      time, place, and book details closer to the date.
-    </p>
-    <p style="color:#5E4328;font-size:15px;line-height:1.6;">
-      See you under the lamp! 🪔
-    </p>
+    <!-- Body -->
+    <div style="background:white;padding:40px;border-left:1px solid #DDD9D5;border-right:1px solid #DDD9D5;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <span style="font-size:40px;">&#10024;</span>
+        <h2 style="font-size:24px;color:#191B14;margin:8px 0 0;letter-spacing:2px;text-transform:uppercase;font-weight:800;">You're In!</h2>
+      </div>
 
-    <hr style="border:none;border-top:1px solid #F0E6D8;margin:24px 0;">
-    <p style="color:#C6A478;font-size:12px;text-align:center;">
-      Under the Lamp Book Club
-    </p>
+      <p style="color:#191B14;font-size:16px;line-height:1.6;">
+        Hi <strong>${name}</strong>,
+      </p>
+      <p style="color:#555850;font-size:15px;line-height:1.6;">
+        Your spot is confirmed for this month's gathering. We'll send you the
+        time, place, and book details closer to the date.
+      </p>
+      <p style="color:#555850;font-size:15px;line-height:1.6;">
+        See you under the lamp! 🪔
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background-color:#191B14;border-radius:0 0 16px 16px;padding:20px;text-align:center;">
+      <p style="color:#EFEDEB;font-size:11px;margin:0;letter-spacing:2px;text-transform:uppercase;">Under the Lamp Book Club</p>
+    </div>
   </div>
 </body>
 </html>`;
@@ -193,11 +246,22 @@ export async function sendMonthlyInvites({ waitlistId } = {}) {
       html: invitationEmailHtml(person.name, token),
     });
 
+    // Send WhatsApp if phone number is available
+    let whatsappResult = null;
+    if (person.phone) {
+      const rsvpUrl = `${SITE_URL}/rsvp/${token}`;
+      whatsappResult = await sendWhatsApp({
+        to: person.phone,
+        body: `🪔 *Under the Lamp Book Club*\n\nHi ${person.name}! A spot has opened up for our next gathering.\n\nRSVP here (expires in 24 hours):\n${rsvpUrl}\n\nOr simply reply *YES* or *NO* to this message. 👆`,
+      });
+    }
+
     results.push({
       name: person.name,
       email: person.email,
       token,
       emailResult,
+      whatsappResult,
     });
   }
 
@@ -261,6 +325,14 @@ export async function handleRSVP(token, response) {
       subject: "Confirmed! See you under the lamp ✨",
       html: confirmationEmailHtml(invitation.waitlist.name),
     });
+
+    // Send WhatsApp confirmation if phone available
+    if (invitation.waitlist.phone) {
+      await sendWhatsApp({
+        to: invitation.waitlist.phone,
+        body: `✨ *Under the Lamp Book Club*\n\nYou're confirmed, ${invitation.waitlist.name}! We'll send you the time, place, and book details closer to the date.\n\nSee you under the lamp! 🪔`,
+      });
+    }
 
     return { status: "accepted", name: invitation.waitlist.name };
   } else {
@@ -339,6 +411,14 @@ async function cascadeToNext(month) {
     subject: "A spot just opened — you're invited! 🪔",
     html: invitationEmailHtml(nextPerson.name, token),
   });
+
+  if (nextPerson.phone) {
+    const rsvpUrl = `${SITE_URL}/rsvp/${token}`;
+    await sendWhatsApp({
+      to: nextPerson.phone,
+      body: `🪔 *Under the Lamp Book Club*\n\nHi ${nextPerson.name}! A spot just opened up — you're next in line!\n\nRSVP here (expires in 24 hours):\n${rsvpUrl}\n\nOr simply reply *YES* or *NO* to this message. 👆`,
+    });
+  }
 
   console.log(
     `Cascaded invitation to ${nextPerson.name} (${nextPerson.email})`,

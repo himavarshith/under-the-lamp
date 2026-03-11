@@ -90,13 +90,17 @@ const DEMO_WAITLIST = [
 const statusConfig = {
   waiting: {
     label: "Waiting",
-    color: "bg-warm-100 text-warm-600",
+    color: "bg-parchment text-carbon-muted",
     icon: Clock,
   },
-  invited: { label: "Invited", color: "bg-blue-50 text-blue-600", icon: Send },
+  invited: {
+    label: "Invited",
+    color: "bg-lavender/30 text-brand-blue",
+    icon: Send,
+  },
   accepted: {
     label: "Accepted",
-    color: "bg-green-50 text-green-600",
+    color: "bg-lime/30 text-carbon",
     icon: CheckCircle,
   },
   declined: {
@@ -106,7 +110,7 @@ const statusConfig = {
   },
   expired: {
     label: "Expired",
-    color: "bg-warm-100 text-warm-400",
+    color: "bg-parchment text-carbon-muted/60",
     icon: Clock,
   },
 };
@@ -127,9 +131,11 @@ function AdminLogin({ onLogin }) {
 
   return (
     <div className="max-w-sm mx-auto px-4 py-32 text-center">
-      <Shield className="w-12 h-12 text-lamp-500 mx-auto mb-4" />
-      <h2 className="font-serif text-2xl mb-2">Admin Access</h2>
-      <p className="text-warm-400 text-sm mb-6">
+      <Shield className="w-12 h-12 text-lime mx-auto mb-4" />
+      <h2 className="font-display text-2xl mb-2 uppercase font-bold">
+        Admin Access
+      </h2>
+      <p className="text-carbon-muted text-sm mb-6 font-sans">
         Enter the admin password to continue.
       </p>
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -140,14 +146,16 @@ function AdminLogin({ onLogin }) {
             setPassword(e.target.value);
             setError(false);
           }}
-          className="w-full px-4 py-3 rounded-xl border border-warm-200 bg-white text-warm-900
-                     focus:outline-none focus:ring-2 focus:ring-lamp-400/50 text-center"
+          className="w-full px-4 py-3 rounded-xl border border-parchment-dark bg-white text-carbon
+                     focus:outline-none focus:ring-2 focus:ring-brand-blue/30 text-center font-sans"
           placeholder="Password"
         />
-        {error && <p className="text-red-500 text-sm">Incorrect password.</p>}
+        {error && (
+          <p className="text-red-500 text-sm font-sans">Incorrect password.</p>
+        )}
         <button
           type="submit"
-          className="w-full bg-lamp-500 hover:bg-lamp-600 text-white font-medium py-3 rounded-xl transition"
+          className="w-full bg-lime hover:bg-lime-dark text-carbon font-display font-bold uppercase tracking-wider py-3 rounded-xl transition"
         >
           Enter
         </button>
@@ -201,12 +209,12 @@ function WaitlistTab() {
     await Promise.all([
       supabase
         .from("waitlist")
-        .update({ position: updated[index + 1].position })
-        .eq("id", updated[index + 1].id),
-      supabase
-        .from("waitlist")
         .update({ position: updated[index].position })
         .eq("id", updated[index].id),
+      supabase
+        .from("waitlist")
+        .update({ position: updated[index + 1].position })
+        .eq("id", updated[index + 1].id),
     ]);
   };
 
@@ -284,7 +292,7 @@ function WaitlistTab() {
   if (loading) {
     return (
       <div className="text-center py-16">
-        <div className="w-8 h-8 border-2 border-lamp-300 border-t-lamp-600 rounded-full animate-spin mx-auto" />
+        <div className="w-8 h-8 border-2 border-parchment-dark border-t-brand-blue rounded-full animate-spin mx-auto" />
       </div>
     );
   }
@@ -300,20 +308,18 @@ function WaitlistTab() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: "Waiting", value: counts.waiting, color: "text-warm-600" },
-          { label: "Invited", value: counts.invited, color: "text-blue-600" },
-          {
-            label: "Accepted",
-            value: counts.accepted,
-            color: "text-green-600",
-          },
+          { label: "Waiting", value: counts.waiting, color: "text-carbon" },
+          { label: "Invited", value: counts.invited, color: "text-brand-blue" },
+          { label: "Accepted", value: counts.accepted, color: "text-carbon" },
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-xl p-4 border border-warm-100 text-center"
+            className="bg-white rounded-xl p-4 border border-parchment-dark text-center"
           >
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-warm-400">{s.label}</p>
+            <p className={`text-2xl font-display font-bold ${s.color}`}>
+              {s.value}
+            </p>
+            <p className="text-xs text-carbon-muted font-sans">{s.label}</p>
           </div>
         ))}
       </div>
@@ -322,8 +328,8 @@ function WaitlistTab() {
       <button
         onClick={triggerMonthlyRound}
         disabled={sending}
-        className="w-full mb-6 flex items-center justify-center gap-2 bg-lamp-500 hover:bg-lamp-600
-                   text-white font-medium py-3 rounded-xl transition disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full mb-6 flex items-center justify-center gap-2 bg-lime hover:bg-lime-dark
+                   text-carbon font-display font-bold uppercase tracking-wider py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Send className={`w-4 h-4 ${sending ? "animate-pulse" : ""}`} />
         {sending ? "Sending Invites..." : "Send Invites Now (Top 4)"}
@@ -337,17 +343,19 @@ function WaitlistTab() {
           return (
             <div
               key={item.id}
-              className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 border border-warm-100"
+              className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 border border-parchment-dark"
             >
-              <span className="text-xs text-warm-300 w-6 text-center font-mono">
+              <span className="text-xs text-carbon-muted/50 w-6 text-center font-mono">
                 #{item.position}
               </span>
 
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-warm-900 truncate">
+                <p className="font-medium text-sm text-carbon truncate font-sans">
                   {item.name}
                 </p>
-                <p className="text-xs text-warm-400 truncate">{item.email}</p>
+                <p className="text-xs text-carbon-muted truncate font-sans">
+                  {item.email}
+                </p>
               </div>
 
               <span
@@ -360,14 +368,14 @@ function WaitlistTab() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => moveUp(index)}
-                  className="p-1.5 rounded-lg hover:bg-warm-100 text-warm-400 hover:text-warm-600 transition"
+                  className="p-1.5 rounded-lg hover:bg-parchment text-carbon-muted hover:text-carbon transition"
                   title="Move up"
                 >
                   <ArrowUp className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => moveDown(index)}
-                  className="p-1.5 rounded-lg hover:bg-warm-100 text-warm-400 hover:text-warm-600 transition"
+                  className="p-1.5 rounded-lg hover:bg-parchment text-carbon-muted hover:text-carbon transition"
                   title="Move down"
                 >
                   <ArrowDown className="w-3.5 h-3.5" />
@@ -383,7 +391,7 @@ function WaitlistTab() {
                 )}
                 <button
                   onClick={() => remove(item)}
-                  className="p-1.5 rounded-lg hover:bg-red-50 text-warm-300 hover:text-red-500 transition"
+                  className="p-1.5 rounded-lg hover:bg-red-50 text-carbon-muted/40 hover:text-red-500 transition"
                   title="Remove"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -523,15 +531,16 @@ function PhotoUploadTab() {
     setUploading(false);
     // Reset input so same file can be re-selected
     e.target.value = "";
+    // Refresh photo list for the album
     await loadPhotos(selectedAlbum);
   };
 
   return (
     <div className="space-y-6">
       {/* Create Album */}
-      <div className="bg-white rounded-xl p-6 border border-warm-100">
-        <h3 className="font-serif text-lg mb-4 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-lamp-500" />
+      <div className="bg-white rounded-xl p-6 border border-parchment-dark">
+        <h3 className="font-display text-lg mb-4 flex items-center gap-2 uppercase font-bold">
+          <Plus className="w-4 h-4 text-lime" />
           Create Album
         </h3>
         <form
@@ -543,17 +552,17 @@ function PhotoUploadTab() {
             value={newAlbumTitle}
             onChange={(e) => setNewAlbumTitle(e.target.value)}
             placeholder="Album title"
-            className="flex-1 px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
+            className="flex-1 px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
           />
           <input
             type="month"
             value={newAlbumMonth}
             onChange={(e) => setNewAlbumMonth(e.target.value)}
-            className="w-full sm:w-auto px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
+            className="w-full sm:w-auto px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
           />
           <button
             type="submit"
-            className="w-full sm:w-auto bg-lamp-500 hover:bg-lamp-600 text-white text-sm px-4 py-2 rounded-lg transition"
+            className="w-full sm:w-auto bg-lime hover:bg-lime-dark text-carbon font-display font-bold uppercase text-sm px-4 py-2 rounded-lg transition"
           >
             Create
           </button>
@@ -561,9 +570,9 @@ function PhotoUploadTab() {
       </div>
 
       {/* Upload Photos */}
-      <div className="bg-white rounded-xl p-6 border border-warm-100">
-        <h3 className="font-serif text-lg mb-4 flex items-center gap-2">
-          <Upload className="w-4 h-4 text-lamp-500" />
+      <div className="bg-white rounded-xl p-6 border border-parchment-dark">
+        <h3 className="font-display text-lg mb-4 flex items-center gap-2 uppercase font-bold">
+          <Upload className="w-4 h-4 text-lime" />
           Upload Photos
         </h3>
 
@@ -578,21 +587,21 @@ function PhotoUploadTab() {
                       setSelectedAlbum(a.id);
                       if (!photosMap[a.id]) loadPhotos(a.id);
                     }}
-                    className={`flex-1 text-left px-3 py-2 rounded-lg border text-sm transition
+                    className={`flex-1 text-left px-3 py-2 rounded-lg border text-sm transition font-sans
                       ${
                         selectedAlbum === a.id
-                          ? "border-lamp-400 bg-lamp-50 text-lamp-700"
-                          : "border-warm-200 hover:border-warm-300"
+                          ? "border-brand-blue bg-lavender/20 text-brand-blue"
+                          : "border-parchment-dark hover:border-carbon-muted"
                       }`}
                   >
                     {a.title}{" "}
-                    <span className="text-warm-400">
+                    <span className="text-carbon-muted">
                       ({a.month?.slice(0, 7)})
                     </span>
                   </button>
                   <button
                     onClick={() => deleteAlbum(a)}
-                    className="p-2 rounded-lg hover:bg-red-50 text-warm-300 hover:text-red-500 transition"
+                    className="p-2 rounded-lg hover:bg-red-50 text-carbon-muted/40 hover:text-red-500 transition"
                     title="Delete album"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -607,19 +616,19 @@ function PhotoUploadTab() {
                         rounded-xl transition
                         ${
                           selectedAlbum && !uploading
-                            ? "border-lamp-300 hover:border-lamp-500 hover:bg-lamp-50/50 cursor-pointer"
-                            : "border-warm-200 opacity-50 cursor-not-allowed"
+                            ? "border-brand-blue hover:border-brand-blue-dark hover:bg-lavender/10 cursor-pointer"
+                            : "border-parchment-dark opacity-50 cursor-not-allowed"
                         }`}
           >
-            <Camera className="w-8 h-8 text-warm-400 mb-2" />
-            <p className="text-sm text-warm-500">
+            <Camera className="w-8 h-8 text-carbon-muted mb-2" />
+            <p className="text-sm text-carbon-muted font-sans">
               {uploading
                 ? "Uploading..."
                 : selectedAlbum
                   ? "Click to upload photos"
                   : "Select an album first"}
             </p>
-            <p className="text-xs text-warm-300 mt-1">
+            <p className="text-xs text-carbon-muted/50 mt-1 font-sans">
               PNG, JPG, WEBP up to 10MB each
             </p>
             <input
@@ -644,7 +653,7 @@ function PhotoUploadTab() {
           {selectedAlbum &&
             photosMap[selectedAlbum] &&
             (photosMap[selectedAlbum].length === 0 ? (
-              <p className="text-warm-400 text-sm text-center py-4">
+              <p className="text-xs text-carbon-muted text-center py-4 font-sans">
                 No photos in this album yet.
               </p>
             ) : (
@@ -652,7 +661,7 @@ function PhotoUploadTab() {
                 {photosMap[selectedAlbum].map((photo) => (
                   <div
                     key={photo.id}
-                    className="relative group rounded-lg overflow-hidden bg-warm-100"
+                    className="relative group rounded-lg overflow-hidden bg-parchment-dark"
                   >
                     <img
                       src={photo.url}
@@ -662,13 +671,13 @@ function PhotoUploadTab() {
                     <button
                       onClick={() => deletePhoto(photo)}
                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5
-                               opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
+                                   opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
                       title="Delete photo"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
                     {photo.caption && (
-                      <p className="text-xs text-warm-500 px-1.5 py-1 truncate">
+                      <p className="text-xs text-carbon-muted px-1.5 py-1 truncate font-sans">
                         {photo.caption}
                       </p>
                     )}
@@ -720,9 +729,9 @@ function BookTab() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 border border-warm-100">
-      <h3 className="font-serif text-lg mb-4 flex items-center gap-2">
-        <BookOpen className="w-4 h-4 text-lamp-500" />
+    <div className="bg-white rounded-xl p-6 border border-parchment-dark">
+      <h3 className="font-display text-lg mb-4 flex items-center gap-2 uppercase font-bold">
+        <BookOpen className="w-4 h-4 text-lime" />
         Set Book of the Month
       </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -733,7 +742,7 @@ function BookTab() {
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             placeholder="Book title"
             required
-            className="px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
+            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
           />
           <input
             type="text"
@@ -741,7 +750,7 @@ function BookTab() {
             onChange={(e) => setForm({ ...form, author: e.target.value })}
             placeholder="Author"
             required
-            className="px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
+            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
           />
         </div>
         <textarea
@@ -749,7 +758,7 @@ function BookTab() {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           placeholder="Brief description..."
           rows={3}
-          className="w-full px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50 resize-none"
+          className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 resize-none font-sans"
         />
         <div className="grid grid-cols-2 gap-4">
           <input
@@ -757,23 +766,27 @@ function BookTab() {
             value={form.cover_url}
             onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
             placeholder="Cover image URL (optional)"
-            className="px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
+            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
           />
           <input
             type="month"
             value={form.month}
             onChange={(e) => setForm({ ...form, month: e.target.value })}
             required
-            className="px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
+            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
           />
         </div>
         <button
           type="submit"
-          className="bg-lamp-500 hover:bg-lamp-600 text-white font-medium py-2.5 px-6 rounded-lg transition text-sm"
+          className="bg-lime hover:bg-lime-dark text-carbon font-display font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition text-sm"
         >
           Save Book
         </button>
-        {saved && <span className="text-green-600 text-sm ml-3">✓ Saved!</span>}
+        {saved && (
+          <span className="text-carbon font-sans text-sm ml-3">
+            &#10003; Saved!
+          </span>
+        )}
       </form>
     </div>
   );
@@ -798,12 +811,16 @@ export default function Admin() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="font-serif text-3xl">Admin Dashboard</h2>
-          <p className="text-warm-400 text-sm mt-1">Manage your book club</p>
+          <h2 className="font-display text-3xl uppercase font-extrabold">
+            Admin Dashboard
+          </h2>
+          <p className="text-carbon-muted text-sm mt-1 font-sans">
+            Manage your book club
+          </p>
         </div>
         <button
           onClick={() => setIsAuthenticated(false)}
-          className="text-sm text-warm-400 hover:text-warm-600 transition flex items-center gap-1"
+          className="text-sm text-carbon-muted hover:text-carbon transition flex items-center gap-1 font-sans"
         >
           <EyeOff className="w-3.5 h-3.5" />
           Lock
@@ -811,7 +828,7 @@ export default function Admin() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-8 bg-warm-100 rounded-xl p-1">
+      <div className="flex gap-1 mb-8 bg-parchment-dark rounded-xl p-1">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -819,8 +836,8 @@ export default function Admin() {
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition
               ${
                 activeTab === id
-                  ? "bg-white text-warm-900 shadow-sm"
-                  : "text-warm-400 hover:text-warm-600"
+                  ? "bg-white text-carbon shadow-sm font-display font-bold uppercase"
+                  : "text-carbon-muted hover:text-carbon font-sans"
               }`}
           >
             <Icon className="w-4 h-4" />

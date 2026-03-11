@@ -26,7 +26,7 @@ function MasonryGrid({ photos }) {
           {col.map((photo) => (
             <div
               key={photo.id}
-              className="rounded-xl overflow-hidden bg-warm-100 group cursor-pointer"
+              className="rounded-xl overflow-hidden bg-parchment-dark group cursor-pointer"
             >
               <img
                 src={photo.url}
@@ -35,7 +35,7 @@ function MasonryGrid({ photos }) {
                 loading="lazy"
               />
               {photo.caption && (
-                <p className="px-3 py-2 text-xs text-warm-600">
+                <p className="px-3 py-2 text-xs text-carbon-muted font-sans">
                   {photo.caption}
                 </p>
               )}
@@ -59,22 +59,22 @@ function AlbumFolder({ album, photos }) {
   );
 
   return (
-    <div className="border border-warm-200 rounded-2xl overflow-hidden bg-white">
+    <div className="border border-parchment-dark rounded-2xl overflow-hidden bg-white">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-4 px-6 py-5 hover:bg-warm-50 transition text-left"
+        className="w-full flex items-center gap-4 px-6 py-5 hover:bg-parchment transition text-left"
       >
         {isOpen ? (
-          <FolderOpen className="w-6 h-6 text-lamp-500 shrink-0" />
+          <FolderOpen className="w-6 h-6 text-brand-blue shrink-0" />
         ) : (
-          <FolderClosed className="w-6 h-6 text-lamp-500 shrink-0" />
+          <FolderClosed className="w-6 h-6 text-brand-blue shrink-0" />
         )}
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-serif text-lg text-warm-900">
+          <h3 className="font-display text-lg text-carbon uppercase font-bold tracking-wide">
             {album.title || monthLabel}
           </h3>
-          <p className="text-xs text-warm-400 mt-0.5">
+          <p className="text-xs text-carbon-muted mt-0.5 font-sans">
             {monthLabel} · {photos.length} photo{photos.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -91,9 +91,9 @@ function AlbumFolder({ album, photos }) {
         )}
 
         {isOpen ? (
-          <ChevronUp className="w-5 h-5 text-warm-400 shrink-0" />
+          <ChevronUp className="w-5 h-5 text-carbon-muted shrink-0" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-warm-400 shrink-0" />
+          <ChevronDown className="w-5 h-5 text-carbon-muted shrink-0" />
         )}
       </button>
 
@@ -102,7 +102,7 @@ function AlbumFolder({ album, photos }) {
           {photos.length > 0 ? (
             <MasonryGrid photos={photos} />
           ) : (
-            <p className="text-warm-400 text-sm text-center py-8">
+            <p className="text-carbon-muted text-sm text-center py-8 font-sans">
               No photos in this album yet.
             </p>
           )}
@@ -217,7 +217,7 @@ export default function Gallery() {
           setPhotosMap(grouped);
         }
       } else {
-        // Use demo data
+        // No albums yet — show empty state
         setAlbums([]);
         setPhotosMap({});
       }
@@ -230,12 +230,14 @@ export default function Gallery() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-16">
       <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 text-lamp-600 text-xs uppercase tracking-widest mb-3">
+        <div className="inline-flex items-center gap-2 text-brand-blue text-xs uppercase tracking-widest mb-3 font-display font-bold">
           <Camera className="w-4 h-4" />
           Photo Archive
         </div>
-        <h2 className="font-serif text-4xl mb-3">Moments Under the Lamp</h2>
-        <p className="text-warm-500 max-w-lg mx-auto">
+        <h2 className="font-display text-4xl mb-3 uppercase font-extrabold">
+          Moments Under the Lamp
+        </h2>
+        <p className="text-carbon-muted max-w-lg mx-auto font-sans">
           A visual story of our gatherings — each album a memory, each photo a
           page turned together.
         </p>
@@ -243,13 +245,13 @@ export default function Gallery() {
 
       {loading ? (
         <div className="text-center py-16">
-          <div className="w-8 h-8 border-2 border-lamp-300 border-t-lamp-600 rounded-full animate-spin mx-auto" />
+          <div className="w-8 h-8 border-2 border-parchment-dark border-t-brand-blue rounded-full animate-spin mx-auto" />
         </div>
       ) : albums.length === 0 ? (
-        <div className="text-center py-16 text-warm-400">
+        <div className="text-center py-16 text-carbon-muted">
           <Camera className="w-10 h-10 mx-auto mb-3 opacity-40" />
-          <p className="text-lg">
-            No albums yet. Check back after our next meet!
+          <p className="text-sm font-sans">
+            No photos yet — check back after our first gathering!
           </p>
         </div>
       ) : (

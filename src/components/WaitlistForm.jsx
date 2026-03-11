@@ -1,67 +1,78 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabase'
-import { Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { useState } from "react";
+import { supabase } from "../lib/supabase";
+import { Send, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function WaitlistForm() {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', reason: '', area: '' })
-  const [status, setStatus] = useState('idle') // idle | loading | success | error
-  const [errorMsg, setErrorMsg] = useState('')
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    reason: "",
+    area: "",
+  });
+  const [status, setStatus] = useState("idle"); // idle | loading | success | error
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setStatus('loading')
-    setErrorMsg('')
+    e.preventDefault();
+    setStatus("loading");
+    setErrorMsg("");
 
     try {
-      const { error } = await supabase.from('waitlist').insert({
+      const { error } = await supabase.from("waitlist").insert({
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim() || null,
         reason: form.reason.trim() || null,
         area: form.area || null,
-        status: 'waiting',
-      })
+        status: "waiting",
+      });
 
       if (error) {
-        if (error.code === '23505') {
-          setErrorMsg('This email is already on the waitlist!')
+        if (error.code === "23505") {
+          setErrorMsg("This email is already on the waitlist!");
         } else {
-          setErrorMsg('Something went wrong. Please try again.')
+          setErrorMsg("Something went wrong. Please try again.");
         }
-        setStatus('error')
-        return
+        setStatus("error");
+        return;
       }
 
-      setStatus('success')
-      setForm({ name: '', email: '', phone: '', reason: '', area: '' })
+      setStatus("success");
+      setForm({ name: "", email: "", phone: "", reason: "", area: "" });
     } catch {
-      setErrorMsg('Network error. Please try again.')
-      setStatus('error')
+      setErrorMsg("Network error. Please try again.");
+      setStatus("error");
     }
-  }
+  };
 
-  if (status === 'success') {
+  if (status === "success") {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
-        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-        <h3 className="font-serif text-xl text-green-800 mb-2">You're on the List!</h3>
-        <p className="text-green-600 text-sm">
+      <div className="bg-lime/20 border border-lime/40 rounded-2xl p-8 text-center">
+        <CheckCircle className="w-12 h-12 text-brand-blue mx-auto mb-4" />
+        <h3 className="font-display text-xl text-carbon mb-2 uppercase">
+          You're on the List!
+        </h3>
+        <p className="text-carbon-muted text-sm font-sans">
           We'll reach out when it's your turn. Keep an eye on your inbox.
         </p>
         <button
-          onClick={() => setStatus('idle')}
-          className="mt-4 text-sm text-green-700 underline hover:no-underline"
+          onClick={() => setStatus("idle")}
+          className="mt-4 text-sm text-brand-blue underline hover:no-underline font-sans"
         >
           Add another person
         </button>
       </div>
-    )
+    );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="wl-name" className="block text-sm font-medium text-warm-700 mb-1">
+        <label
+          htmlFor="wl-name"
+          className="block text-sm font-medium text-carbon mb-1 font-sans"
+        >
           Name
         </label>
         <input
@@ -70,15 +81,18 @@ export default function WaitlistForm() {
           required
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-warm-200 bg-white text-warm-900
-                     placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-lamp-400/50
-                     focus:border-lamp-400 transition"
+          className="w-full px-4 py-3 rounded-xl border border-parchment-dark bg-white text-carbon
+                     placeholder:text-carbon-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30
+                     focus:border-brand-blue transition font-sans"
           placeholder="Your full name"
         />
       </div>
 
       <div>
-        <label htmlFor="wl-email" className="block text-sm font-medium text-warm-700 mb-1">
+        <label
+          htmlFor="wl-email"
+          className="block text-sm font-medium text-carbon mb-1 font-sans"
+        >
           Email
         </label>
         <input
@@ -87,17 +101,23 @@ export default function WaitlistForm() {
           required
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-warm-200 bg-white text-warm-900
-                     placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-lamp-400/50
-                     focus:border-lamp-400 transition"
+          className="w-full px-4 py-3 rounded-xl border border-parchment-dark bg-white text-carbon
+                     placeholder:text-carbon-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30
+                     focus:border-brand-blue transition font-sans"
           placeholder="you@example.com"
         />
       </div>
 
       <div>
-        <label htmlFor="wl-phone" className="block text-sm font-medium text-warm-700 mb-1">
+        <label
+          htmlFor="wl-phone"
+          className="block text-sm font-medium text-carbon mb-1 font-sans"
+        >
           Mobile Number
-          <span className="text-warm-400 font-normal"> — to coordinate</span>
+          <span className="text-carbon-muted font-normal">
+            {" "}
+            — to coordinate
+          </span>
         </label>
         <input
           id="wl-phone"
@@ -105,17 +125,23 @@ export default function WaitlistForm() {
           required
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-warm-200 bg-white text-warm-900
-                     placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-lamp-400/50
-                     focus:border-lamp-400 transition"
+          className="w-full px-4 py-3 rounded-xl border border-parchment-dark bg-white text-carbon
+                     placeholder:text-carbon-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30
+                     focus:border-brand-blue transition font-sans"
           placeholder="+91 98765 43210"
         />
       </div>
 
       <div>
-        <label htmlFor="wl-reason" className="block text-sm font-medium text-warm-700 mb-1">
+        <label
+          htmlFor="wl-reason"
+          className="block text-sm font-medium text-carbon mb-1 font-sans"
+        >
           Why do you want to join UTL?
-          <span className="text-warm-400 font-normal"> — this won't affect your joining, be honest</span>
+          <span className="text-carbon-muted font-normal">
+            {" "}
+            — this won't affect your joining, be honest
+          </span>
         </label>
         <textarea
           id="wl-reason"
@@ -123,24 +149,27 @@ export default function WaitlistForm() {
           rows={3}
           value={form.reason}
           onChange={(e) => setForm({ ...form, reason: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-warm-200 bg-white text-warm-900
-                     placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-lamp-400/50
-                     focus:border-lamp-400 transition resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-parchment-dark bg-white text-carbon
+                     placeholder:text-carbon-muted/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30
+                     focus:border-brand-blue transition resize-none font-sans"
           placeholder="I love reading and…"
         />
       </div>
 
       <div>
-        <label htmlFor="wl-area" className="block text-sm font-medium text-warm-700 mb-1">
+        <label
+          htmlFor="wl-area"
+          className="block text-sm font-medium text-carbon mb-1 font-sans"
+        >
           Which area in Bangalore do you live in?
         </label>
         <select
           id="wl-area"
           value={form.area}
           onChange={(e) => setForm({ ...form, area: e.target.value })}
-          className="w-full px-4 py-3 rounded-xl border border-warm-200 bg-white text-warm-900
-                     focus:outline-none focus:ring-2 focus:ring-lamp-400/50
-                     focus:border-lamp-400 transition"
+          className="w-full px-4 py-3 rounded-xl border border-parchment-dark bg-white text-carbon
+                     focus:outline-none focus:ring-2 focus:ring-brand-blue/30
+                     focus:border-brand-blue transition font-sans"
         >
           <option value="">Select your area…</option>
           <option value="Koramangala">Koramangala</option>
@@ -162,7 +191,7 @@ export default function WaitlistForm() {
         </select>
       </div>
 
-      {status === 'error' && (
+      {status === "error" && (
         <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {errorMsg}
@@ -171,14 +200,14 @@ export default function WaitlistForm() {
 
       <button
         type="submit"
-        disabled={status === 'loading'}
-        className="w-full flex items-center justify-center gap-2 bg-lamp-500 hover:bg-lamp-600
-                   text-white font-medium py-3 px-6 rounded-xl transition disabled:opacity-60
-                   disabled:cursor-not-allowed shadow-lg shadow-lamp-500/20"
+        disabled={status === "loading"}
+        className="w-full flex items-center justify-center gap-2 bg-lime hover:bg-lime-dark
+                   text-carbon font-display font-bold uppercase tracking-wider py-3 px-6 rounded-xl
+                   transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime/20"
       >
         <Send className="w-4 h-4" />
-        {status === 'loading' ? 'Joining...' : 'Join the Waitlist'}
+        {status === "loading" ? "Joining..." : "Join the Waitlist"}
       </button>
     </form>
-  )
+  );
 }

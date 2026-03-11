@@ -46,59 +46,64 @@ export default function RSVP() {
       });
       const data = await res.json();
       if (!res.ok || data.error)
-        throw new Error(data.error || "Failed to submit RSVP");
+        throw new Error(data.error || "Request failed");
       setStatus(response === "yes" ? "accepted" : "declined");
     } catch (err) {
-      console.error("RSVP Error:", err);
+      console.error("[UTL] RSVP error:", err);
       setStatus("error");
     }
-
-    // If declined, the edge function cascade handler will pick up the next person
   };
 
   return (
-    <div className="min-h-screen bg-warm-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-carbon flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-lamp-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lamp className="w-8 h-8 text-lamp-500" />
+          <div className="w-16 h-16 bg-lime/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lamp className="w-8 h-8 text-lime" />
           </div>
-          <h1 className="font-serif text-2xl text-warm-900">Under the Lamp</h1>
-          <p className="text-warm-400 text-sm">Book Club RSVP</p>
+          <h1 className="font-display text-2xl text-parchment uppercase font-extrabold tracking-wider">
+            Under the Lamp
+          </h1>
+          <p className="text-parchment/40 text-sm font-sans">Book Club RSVP</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-warm-100 text-center">
+        <div className="bg-carbon-light rounded-2xl p-8 border border-parchment/10 text-center">
           {status === "loading" && (
             <div className="py-8">
-              <Loader2 className="w-8 h-8 text-lamp-500 animate-spin mx-auto" />
+              <Loader2 className="w-8 h-8 text-lime animate-spin mx-auto" />
             </div>
           )}
 
           {status === "prompt" && invitation && (
             <>
-              <h2 className="font-serif text-xl mb-2">You're Invited!</h2>
-              <p className="text-warm-500 text-sm mb-6">
-                Hi <strong>{invitation.waitlist?.name}</strong>, a spot has
-                opened up at our next book club gathering! Would you like to
-                join us?
+              <h2 className="font-display text-xl mb-2 text-parchment uppercase font-bold">
+                You're Invited!
+              </h2>
+              <p className="text-parchment/60 text-sm mb-6 font-sans">
+                Hi{" "}
+                <strong className="text-parchment">
+                  {invitation.waitlist?.name}
+                </strong>
+                , a spot has opened up at our next book club gathering! Would
+                you like to join us?
               </p>
-              <p className="text-xs text-warm-300 mb-8">
+              <p className="text-xs text-parchment/30 mb-8 font-sans">
                 This invitation expires in 24 hours.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => respond("yes")}
-                  className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600
-                             text-white font-medium py-3 rounded-xl transition"
+                  className="flex-1 flex items-center justify-center gap-2 bg-lime hover:bg-lime-dark
+                             text-carbon font-display font-bold uppercase tracking-wide py-3 rounded-xl transition"
                 >
                   <CheckCircle className="w-5 h-5" />
                   Yes, I'm in!
                 </button>
                 <button
                   onClick={() => respond("no")}
-                  className="flex-1 flex items-center justify-center gap-2 bg-warm-200 hover:bg-warm-300
-                             text-warm-700 font-medium py-3 rounded-xl transition"
+                  className="flex-1 flex items-center justify-center gap-2 bg-carbon border border-parchment/20
+                             hover:bg-parchment/10 text-parchment/70 font-sans font-medium py-3 rounded-xl transition"
                 >
                   <XCircle className="w-5 h-5" />
                   Not this time
@@ -109,11 +114,11 @@ export default function RSVP() {
 
           {status === "accepted" && (
             <>
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="font-serif text-xl text-green-800 mb-2">
+              <CheckCircle className="w-16 h-16 text-lime mx-auto mb-4" />
+              <h2 className="font-display text-xl text-parchment mb-2 uppercase font-bold">
                 You're In!
               </h2>
-              <p className="text-warm-500 text-sm">
+              <p className="text-parchment/60 text-sm font-sans">
                 Your spot is confirmed. We'll send you the details soon. See you
                 under the lamp!
               </p>
@@ -122,9 +127,11 @@ export default function RSVP() {
 
           {status === "declined" && (
             <>
-              <XCircle className="w-16 h-16 text-warm-300 mx-auto mb-4" />
-              <h2 className="font-serif text-xl mb-2">Maybe Next Time</h2>
-              <p className="text-warm-500 text-sm">
+              <XCircle className="w-16 h-16 text-parchment/30 mx-auto mb-4" />
+              <h2 className="font-display text-xl text-parchment mb-2 uppercase font-bold">
+                Maybe Next Time
+              </h2>
+              <p className="text-parchment/60 text-sm font-sans">
                 No worries! You'll stay on the list and we'll reach out again
                 next month.
               </p>
@@ -133,9 +140,11 @@ export default function RSVP() {
 
           {status === "expired" && (
             <>
-              <Clock className="w-16 h-16 text-warm-300 mx-auto mb-4" />
-              <h2 className="font-serif text-xl mb-2">Invitation Expired</h2>
-              <p className="text-warm-500 text-sm">
+              <Clock className="w-16 h-16 text-parchment/30 mx-auto mb-4" />
+              <h2 className="font-display text-xl text-parchment mb-2 uppercase font-bold">
+                Invitation Expired
+              </h2>
+              <p className="text-parchment/60 text-sm font-sans">
                 This invitation has expired, but don't worry — you'll be offered
                 the next available spot.
               </p>
@@ -144,9 +153,11 @@ export default function RSVP() {
 
           {status === "error" && (
             <>
-              <XCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
-              <h2 className="font-serif text-xl mb-2">Invalid Link</h2>
-              <p className="text-warm-500 text-sm">
+              <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <h2 className="font-display text-xl text-parchment mb-2 uppercase font-bold">
+                Invalid Link
+              </h2>
+              <p className="text-parchment/60 text-sm font-sans">
                 This RSVP link doesn't seem valid. Please check your email for
                 the correct link.
               </p>
@@ -157,7 +168,7 @@ export default function RSVP() {
         <div className="text-center mt-6">
           <Link
             to="/"
-            className="text-sm text-warm-400 hover:text-lamp-600 transition"
+            className="text-sm text-parchment/30 hover:text-lime transition font-sans"
           >
             ← Back to Under the Lamp
           </Link>

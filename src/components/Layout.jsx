@@ -1,28 +1,30 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
-import { BookOpen, Camera, Home, Lamp } from 'lucide-react'
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { BookOpen, Camera, Home, Lamp } from "lucide-react";
 
 const navItems = [
-  { to: '/', label: 'Home', icon: Home },
-  { to: '/gallery', label: 'Gallery', icon: Camera },
-]
+  { to: "/", label: "Home", icon: Home },
+  { to: "/gallery", label: "Gallery", icon: Camera },
+];
 
 export default function Layout() {
-  const { pathname } = useLocation()
+  const { pathname } = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-parchment">
       {/* Header */}
-      <header className="bg-warm-900 text-lamp-100">
+      <header className="bg-carbon text-parchment">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-lamp-500/20 flex items-center justify-center group-hover:bg-lamp-500/30 transition">
-              <Lamp className="w-5 h-5 text-lamp-400" />
+            <div className="w-10 h-10 rounded-full bg-lime/10 flex items-center justify-center group-hover:bg-lime/20 transition">
+              <Lamp className="w-5 h-5 text-lime" />
             </div>
             <div>
-              <h1 className="text-xl font-serif font-bold tracking-wide text-lamp-200">
+              <h1 className="text-xl font-display font-extrabold tracking-wider text-lime uppercase">
                 Under the Lamp
               </h1>
-              <p className="text-xs text-warm-400 tracking-widest uppercase">Book Club · Bangalore</p>
+              <p className="text-xs text-parchment/40 tracking-widest uppercase font-sans">
+                Book Club · Bangalore
+              </p>
             </div>
           </Link>
 
@@ -32,9 +34,10 @@ export default function Layout() {
                 key={to}
                 to={to}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
-                  ${pathname === to
-                    ? 'bg-lamp-500/20 text-lamp-300'
-                    : 'text-warm-300 hover:text-lamp-200 hover:bg-warm-800'
+                  ${
+                    pathname === to
+                      ? "bg-lime/20 text-lime"
+                      : "text-parchment/60 hover:text-lime hover:bg-carbon-light"
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -51,17 +54,20 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-warm-900 text-warm-400 py-8">
+      <footer className="bg-carbon text-parchment/40 py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <BookOpen className="w-4 h-4 text-lamp-500" />
-            <span className="font-serif text-lamp-200 text-sm">Under the Lamp</span>
+            <BookOpen className="w-4 h-4 text-lime" />
+            <span className="font-display text-parchment text-sm uppercase tracking-widest">
+              Under the Lamp
+            </span>
           </div>
-          <p className="text-xs">
-            A read-along, discussion-driven book club in Bangalore — one book, one lamp, one story at a time.
+          <p className="text-xs font-sans">
+            A read-along, discussion-driven book club in Bangalore — one book,
+            one lamp, one story at a time.
           </p>
         </div>
       </footer>
     </div>
-  )
+  );
 }

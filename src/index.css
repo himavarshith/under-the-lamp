@@ -1,36 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-  --color-lamp-50: #FFFBEB;
-  --color-lamp-100: #FEF3C7;
-  --color-lamp-200: #FDE68A;
-  --color-lamp-300: #FCD34D;
-  --color-lamp-400: #FBBF24;
-  --color-lamp-500: #F59E0B;
-  --color-lamp-600: #D97706;
-  --color-lamp-700: #B45309;
-  --color-lamp-800: #92400E;
-  --color-lamp-900: #78350F;
-  --color-warm-50: #FAF5F0;
-  --color-warm-100: #F0E6D8;
-  --color-warm-200: #E2D0B8;
-  --color-warm-300: #D4BA98;
-  --color-warm-400: #C6A478;
-  --color-warm-500: #B88E58;
-  --color-warm-600: #9A7548;
-  --color-warm-700: #7C5C38;
-  --color-warm-800: #5E4328;
-  --color-warm-900: #3F2A18;
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  /* ── Brand Palette: Playful Earth ── */
+  --color-parchment: #efedeb;
+  --color-parchment-dark: #ddd9d5;
+  --color-lavender: #ceeeff;
+  --color-lavender-dark: #a8d8f5;
+  --color-brand-blue: #1d62d8;
+  --color-brand-blue-dark: #1550ba;
+  --color-lime: #d3f486;
+  --color-lime-dark: #b8e060;
+  --color-carbon: #191b14;
+  --color-carbon-light: #2c2f24;
+  --color-carbon-muted: #555850;
+
+  /* ── Typography ── */
+  --font-display: "Syne", system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Arial Nova", Arial, system-ui, sans-serif;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-warm-50);
-  color: var(--color-warm-900);
+  background-color: var(--color-parchment);
+  color: var(--color-carbon);
 }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-serif);
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
 }
