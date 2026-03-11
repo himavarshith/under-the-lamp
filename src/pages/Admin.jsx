@@ -174,20 +174,40 @@ function WaitlistTab() {
     fetchWaitlist();
   }, []);
 
-  const moveUp = (index) => {
+  const moveUp = async (index) => {
     if (index === 0) return;
     const updated = [...waitlist];
     [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
     updated.forEach((item, i) => (item.position = i + 1));
     setWaitlist(updated);
+    await Promise.all([
+      supabase
+        .from("waitlist")
+        .update({ position: updated[index - 1].position })
+        .eq("id", updated[index - 1].id),
+      supabase
+        .from("waitlist")
+        .update({ position: updated[index].position })
+        .eq("id", updated[index].id),
+    ]);
   };
 
-  const moveDown = (index) => {
+  const moveDown = async (index) => {
     if (index === waitlist.length - 1) return;
     const updated = [...waitlist];
     [updated[index + 1], updated[index]] = [updated[index], updated[index + 1]];
     updated.forEach((item, i) => (item.position = i + 1));
     setWaitlist(updated);
+    await Promise.all([
+      supabase
+        .from("waitlist")
+        .update({ position: updated[index + 1].position })
+        .eq("id", updated[index + 1].id),
+      supabase
+        .from("waitlist")
+        .update({ position: updated[index].position })
+        .eq("id", updated[index].id),
+    ]);
   };
 
   const remove = async (item) => {
