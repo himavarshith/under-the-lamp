@@ -10,19 +10,19 @@ export default function Layout() {
   const { pathname } = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col bg-parchment">
+    <div className="min-h-screen flex flex-col bg-parchment-dark">
       {/* Header */}
-      <header className="bg-carbon text-parchment">
+      <header className="bg-parchment text-carbon border-b border-parchment-dark">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-lime/10 flex items-center justify-center group-hover:bg-lime/20 transition">
-              <Lamp className="w-5 h-5 text-lime" />
+            <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center group-hover:bg-brand-blue/20 transition">
+              <Lamp className="w-5 h-5 text-brand-blue" />
             </div>
             <div>
-              <h1 className="text-xl font-display font-bold tracking-wider text-lime uppercase">
+              <h1 className="text-xl font-display font-bold tracking-wider text-carbon">
                 Under the Lamp
               </h1>
-              <p className="text-xs text-parchment/40 tracking-widest uppercase font-sans">
+              <p className="text-xs text-carbon/40 tracking-widest uppercase font-sans">
                 Book Club · Bangalore
               </p>
             </div>
@@ -37,7 +37,7 @@ export default function Layout() {
                   ${
                     pathname === to
                       ? "bg-brand-blue text-white"
-                      : "text-parchment/60 hover:text-parchment hover:bg-carbon-light"
+                      : "text-carbon/60 hover:text-carbon hover:bg-parchment-dark"
                   }`}
               >
                 <Icon className="w-4 h-4" />

@@ -234,10 +234,10 @@ export default function Gallery() {
           <Camera className="w-4 h-4" />
           Photo Archive
         </div>
-        <h2 className="font-display text-4xl mb-3 uppercase font-extrabold">
+        <h2 className="font-display text-4xl mb-3 uppercase font-bold">
           Moments Under the Lamp
         </h2>
-        <p className="text-carbon-muted max-w-lg mx-auto font-sans">
+        <p className="text-carbon/60 max-w-lg mx-auto font-sans">
           A visual story of our gatherings — each album a memory, each photo a
           page turned together.
         </p>
