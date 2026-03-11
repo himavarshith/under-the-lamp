@@ -56,7 +56,7 @@ export default function BookOfTheMonth() {
 
         {/* Book Info */}
         <div className="flex-1">
-          <h3 className="font-display text-3xl text-lime mb-1">
+          <h3 className="font-serif italic text-3xl text-lime mb-1">
             {display.title}
           </h3>
           <p className="text-parchment/50 text-sm mb-4 font-sans">
