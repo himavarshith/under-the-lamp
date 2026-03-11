@@ -6,22 +6,22 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative bg-parchment overflow-hidden">
+      <section className="relative bg-carbon overflow-hidden">
         <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-36 text-center">
-          <div className="inline-flex items-center gap-2 text-carbon/50 text-xs uppercase tracking-widest px-4 py-2 rounded-full mb-10 border border-carbon/20">
+          <div className="inline-flex items-center gap-2 text-parchment/50 text-xs uppercase tracking-widest px-4 py-2 rounded-full mb-10 border border-parchment/20">
             <MapPin className="w-3.5 h-3.5" />
             Bangalore's read-along book club
           </div>
 
-          <h1 className="font-display text-6xl md:text-8xl text-carbon mb-2 leading-none uppercase font-bold tracking-tight">
+          <h1 className="font-display text-6xl md:text-8xl text-lime mb-2 leading-none uppercase font-bold tracking-tight">
             Under the Lamp
           </h1>
 
-          <p className="font-serif italic text-carbon/40 text-2xl md:text-3xl mb-12">
+          <p className="font-serif italic text-parchment/50 text-2xl md:text-3xl mb-12">
             book club
           </p>
 
-          <p className="text-carbon/60 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-sans">
+          <p className="text-parchment/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-sans">
             A discussion-driven book club where readers meet once a month to
             dive deep into great stories. One book, one lamp, one conversation
             at a time.
@@ -29,8 +29,8 @@ export default function Home() {
 
           <a
             href="#join"
-            className="inline-flex items-center gap-2 bg-lime hover:bg-lime-dark text-carbon
-                       font-display font-bold uppercase tracking-wider px-8 py-4 rounded-xl transition shadow-lg shadow-lime/20"
+            className="inline-flex items-center gap-2 border-2 border-lime text-lime hover:bg-lime hover:text-carbon
+                       font-display font-bold uppercase tracking-wider px-8 py-4 rounded-xl transition"
           >
             Join the Waitlist
           </a>

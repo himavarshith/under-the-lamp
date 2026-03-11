@@ -12,15 +12,15 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-parchment-dark">
       {/* Header */}
-      <header className="bg-parchment text-carbon border-b border-parchment-dark">
+      <header className="bg-lime text-carbon">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center group-hover:bg-brand-blue/20 transition">
-              <Lamp className="w-5 h-5 text-brand-blue" />
+            <div className="w-14 h-14 rounded-full bg-brand-blue flex items-center shrink-0">
+              <Lamp className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-display font-bold tracking-wider text-carbon">
-                Under the Lamp
+              <h1 className="text-base font-display font-bold tracking-wide text-carbon uppercase leading-tight">
+                Under theLamp
               </h1>
               <p className="text-xs text-carbon/40 tracking-widest uppercase font-sans">
                 Book Club · Bangalore
@@ -33,11 +33,11 @@ export default function Layout() {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
+                className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition
                   ${
                     pathname === to
                       ? "bg-brand-blue text-white"
-                      : "text-carbon/60 hover:text-carbon hover:bg-parchment-dark"
+                      : "text-carbon/70 hover:text-carbon hover:bg-lime-dark"
                   }`}
               >
                 <Icon className="w-4 h-4" />
