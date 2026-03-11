@@ -17,7 +17,7 @@ export default function Home() {
             Bangalore's read-along book club
           </div>
 
-          <h1 className="font-display text-6xl md:text-8xl text-parchment mb-2 leading-none uppercase font-normal tracking-tight">
+          <h1 className="font-display text-6xl md:text-8xl text-parchment mb-2 leading-none uppercase font-bold tracking-tight">
             Under the <span className="text-lime">Lamp</span>
           </h1>
 

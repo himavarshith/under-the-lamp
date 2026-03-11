@@ -19,7 +19,7 @@ export default function Layout() {
               <Lamp className="w-5 h-5 text-lime" />
             </div>
             <div>
-              <h1 className="text-xl font-display font-normal tracking-wider text-lime uppercase">
+              <h1 className="text-xl font-display font-bold tracking-wider text-lime uppercase">
                 Under the Lamp
               </h1>
               <p className="text-xs text-parchment/40 tracking-widest uppercase font-sans">
@@ -58,7 +58,7 @@ export default function Layout() {
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-lime" />
-            <span className="font-display text-parchment text-sm uppercase tracking-widest font-normal">
+            <span className="font-display text-parchment text-sm uppercase tracking-widest font-bold">
               Under the Lamp
             </span>
           </div>

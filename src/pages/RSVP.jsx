@@ -62,7 +62,7 @@ export default function RSVP() {
           <div className="w-16 h-16 bg-lime/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Lamp className="w-8 h-8 text-lime" />
           </div>
-          <h1 className="font-display text-2xl text-parchment uppercase font-normal tracking-wider">
+          <h1 className="font-display text-2xl text-parchment uppercase font-bold tracking-wider">
             Under the Lamp
           </h1>
           <p className="text-parchment/40 text-sm font-sans">Book Club RSVP</p>
