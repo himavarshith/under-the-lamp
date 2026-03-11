@@ -25,7 +25,7 @@ export default function Home() {
             book club
           </p>
 
-          <p className="text-parchment/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-sans">
+          <p className="text-parchment/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-serif italic">
             A discussion-driven book club where readers meet once a month to
             dive deep into great stories. One book, one lamp, one conversation
             at a time.

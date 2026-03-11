@@ -36,8 +36,8 @@ export default function Layout() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
                   ${
                     pathname === to
-                      ? "bg-lime/20 text-lime"
-                      : "text-parchment/60 hover:text-lime hover:bg-carbon-light"
+                      ? "bg-brand-blue text-white"
+                      : "text-parchment/60 hover:text-parchment hover:bg-carbon-light"
                   }`}
               >
                 <Icon className="w-4 h-4" />

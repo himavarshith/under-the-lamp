@@ -31,8 +31,8 @@ export default function BookOfTheMonth() {
   return (
     <section className="bg-carbon rounded-3xl p-8 md:p-12 text-parchment">
       <div className="flex items-center gap-2 mb-6">
-        <BookOpen className="w-5 h-5 text-lime" />
-        <span className="text-xs uppercase tracking-widest text-lime font-display font-bold">
+        <BookOpen className="w-5 h-5 text-brand-blue" />
+        <span className="text-xs uppercase tracking-widest font-display font-bold bg-brand-blue/20 text-brand-blue px-3 py-1 rounded-full">
           Book of the Month
         </span>
       </div>
@@ -62,7 +62,7 @@ export default function BookOfTheMonth() {
           <p className="text-parchment/50 text-sm mb-4 font-serif italic">
             by {display.author}
           </p>
-          <p className="text-parchment/70 leading-relaxed font-sans">
+          <p className="text-parchment/70 leading-relaxed font-serif italic">
             {display.description}
           </p>
         </div>
