@@ -108,8 +108,4 @@ under-the-lamp/
 └── vite.config.js
 ```
 
-## Admin Access
-
-Navigate to `/admin` and enter the password. Default: `under-the-lamp-2026`
-
 > ⚠️ In production, replace the password gate with Supabase Auth.
