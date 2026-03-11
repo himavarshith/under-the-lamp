@@ -190,8 +190,17 @@ function WaitlistTab() {
     setWaitlist(updated);
   };
 
-  const remove = (index) => {
-    setWaitlist(waitlist.filter((_, i) => i !== index));
+  const remove = async (item) => {
+    if (!confirm(`Remove ${item.name} from the waitlist?`)) return;
+    const { error } = await supabase
+      .from("waitlist")
+      .delete()
+      .eq("id", item.id);
+    if (error) {
+      alert(`❌ ${error.message}`);
+      return;
+    }
+    setWaitlist(waitlist.filter((w) => w.id !== item.id));
   };
 
   const triggerInvite = async (item) => {
@@ -236,9 +245,11 @@ function WaitlistTab() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
         },
       );
       const data = await res.json();
+      console.log("[UTL] Response:", data);
       if (!res.ok) throw new Error(data.error || "Request failed");
       await refreshWaitlist();
       alert(`✅ Sent ${data?.invited ?? 0} invitation(s)!`);
@@ -351,7 +362,7 @@ function WaitlistTab() {
                   </button>
                 )}
                 <button
-                  onClick={() => remove(index)}
+                  onClick={() => remove(item)}
                   className="p-1.5 rounded-lg hover:bg-red-50 text-warm-300 hover:text-red-500 transition"
                   title="Remove"
                 >
@@ -374,6 +385,40 @@ function PhotoUploadTab() {
   const [newAlbumMonth, setNewAlbumMonth] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [photosMap, setPhotosMap] = useState({});
+
+  const loadPhotos = async (albumId) => {
+    const { data } = await supabase
+      .from("photos")
+      .select("*")
+      .eq("album_id", albumId)
+      .order("created_at");
+    setPhotosMap((prev) => ({ ...prev, [albumId]: data || [] }));
+  };
+
+  const deleteAlbum = async (album) => {
+    if (!confirm(`Delete album "${album.title}" and all its photos?`)) return;
+    const { error } = await supabase.from("albums").delete().eq("id", album.id);
+    if (error) {
+      alert(`❌ ${error.message}`);
+      return;
+    }
+    setAlbums(albums.filter((a) => a.id !== album.id));
+    if (selectedAlbum === album.id) setSelectedAlbum("");
+  };
+
+  const deletePhoto = async (photo) => {
+    if (!confirm("Delete this photo?")) return;
+    const { error } = await supabase.from("photos").delete().eq("id", photo.id);
+    if (error) {
+      alert(`❌ ${error.message}`);
+      return;
+    }
+    setPhotosMap((prev) => ({
+      ...prev,
+      [photo.album_id]: prev[photo.album_id].filter((p) => p.id !== photo.id),
+    }));
+  };
 
   useEffect(() => {
     async function fetchAlbums() {
@@ -422,28 +467,43 @@ function PhotoUploadTab() {
         .from("photos")
         .upload(fileName, file, { contentType: file.type });
 
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage
-          .from("photos")
-          .getPublicUrl(fileName);
-
-        // Insert photo record
-        const { data: photoData } = await supabase
-          .from("photos")
-          .insert({
-            album_id: selectedAlbum,
-            url: urlData.publicUrl,
-            caption: file.name.replace(/\.[^.]+$/, ""),
-          })
-          .select()
-          .single();
-
-        if (photoData) uploaded.push(photoData);
+      if (uploadError) {
+        console.error("[UTL] Storage upload error:", uploadError);
+        alert(`❌ Upload failed: ${uploadError.message}`);
+        setUploading(false);
+        return;
       }
+
+      const { data: urlData } = supabase.storage
+        .from("photos")
+        .getPublicUrl(fileName);
+
+      // Insert photo record
+      const { data: photoData, error: insertError } = await supabase
+        .from("photos")
+        .insert({
+          album_id: selectedAlbum,
+          url: urlData.publicUrl,
+          caption: file.name.replace(/\.[^.]+$/, ""),
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("[UTL] DB insert error:", insertError);
+        alert(`❌ DB insert failed: ${insertError.message}`);
+        setUploading(false);
+        return;
+      }
+
+      if (photoData) uploaded.push(photoData);
     }
 
     setUploadedFiles([...uploadedFiles, ...uploaded]);
     setUploading(false);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+    await loadPhotos(selectedAlbum);
   };
 
   return (
@@ -476,6 +536,7 @@ function PhotoUploadTab() {
           </button>
         </form>
       </div>
+
       {/* Upload Photos */}
       <div className="bg-white rounded-xl p-6 border border-warm-100">
         <h3 className="font-serif text-lg mb-4 flex items-center gap-2">
@@ -484,18 +545,39 @@ function PhotoUploadTab() {
         </h3>
 
         <div className="space-y-4">
-          <select
-            value={selectedAlbum}
-            onChange={(e) => setSelectedAlbum(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-warm-200 text-sm focus:outline-none focus:ring-2 focus:ring-lamp-400/50"
-          >
-            <option value="">Select an album...</option>
-            {albums.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.title} ({a.month})
-              </option>
-            ))}
-          </select>
+          {/* Album list with delete */}
+          {albums.length > 0 && (
+            <div className="space-y-2 mb-2">
+              {albums.map((a) => (
+                <div key={a.id} className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedAlbum(a.id);
+                      if (!photosMap[a.id]) loadPhotos(a.id);
+                    }}
+                    className={`flex-1 text-left px-3 py-2 rounded-lg border text-sm transition
+                      ${
+                        selectedAlbum === a.id
+                          ? "border-lamp-400 bg-lamp-50 text-lamp-700"
+                          : "border-warm-200 hover:border-warm-300"
+                      }`}
+                  >
+                    {a.title}{" "}
+                    <span className="text-warm-400">
+                      ({a.month?.slice(0, 7)})
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => deleteAlbum(a)}
+                    className="p-2 rounded-lg hover:bg-red-50 text-warm-300 hover:text-red-500 transition"
+                    title="Delete album"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <label
             className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed
@@ -530,8 +612,39 @@ function PhotoUploadTab() {
           </label>
 
           {uploadedFiles.length > 0 && (
-            <div className="text-sm text-green-600">
-              ✓ {uploadedFiles.length} photo(s) uploaded successfully
+            <div className="text-sm text-green-600 mb-2">
+              ✓ {uploadedFiles.length} photo(s) uploaded this session
+            </div>
+          )}
+
+          {/* Photos in selected album */}
+          {selectedAlbum && photosMap[selectedAlbum] && (
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {photosMap[selectedAlbum].map((photo) => (
+                <div
+                  key={photo.id}
+                  className="relative group rounded-lg overflow-hidden bg-warm-100"
+                >
+                  <img
+                    src={photo.url}
+                    alt={photo.caption}
+                    className="w-full h-24 object-cover"
+                  />
+                  <button
+                    onClick={() => deletePhoto(photo)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1
+                               opacity-0 group-hover:opacity-100 transition"
+                    title="Delete photo"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                  {photo.caption && (
+                    <p className="text-xs text-warm-500 px-1 py-0.5 truncate">
+                      {photo.caption}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
