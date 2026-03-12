@@ -42,7 +42,7 @@ function monthLabel(monthStr) {
   });
 }
 
-// Group flat book list into slides: one slide per month (array of books)
+// Group flat book list into slides: one slide per month (array of books), newest first
 function groupByMonth(books) {
   const map = {};
   for (const b of books) {
@@ -52,6 +52,7 @@ function groupByMonth(books) {
   }
   return Object.keys(map)
     .sort()
+    .reverse()
     .map((k) => map[k]);
 }
 
@@ -63,6 +64,16 @@ export default function BookOfTheMonth() {
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
   const directionLocked = useRef(null);
+  const activePillRef = useRef(null);
+
+  // Scroll active pill into view whenever it changes
+  useEffect(() => {
+    activePillRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [activeIdx]);
 
   useEffect(() => {
     async function fetchBooks() {
@@ -150,6 +161,7 @@ export default function BookOfTheMonth() {
           {slides.map((s, i) => (
             <button
               key={s[0].month}
+              ref={i === activeIdx ? activePillRef : null}
               onClick={() => goTo(i)}
               className={`shrink-0 text-xs font-sans font-medium px-3 py-1.5 rounded-full border transition-all duration-200 whitespace-nowrap
                 ${
@@ -203,12 +215,9 @@ export default function BookOfTheMonth() {
             onTouchEnd={handleTouchEnd}
           >
             {slides.map((slideBooks) => (
-              <div
-                key={slideBooks[0].month}
-                className="w-full shrink-0 space-y-8"
-              >
+              <div key={slideBooks[0].month} className="w-full shrink-0">
                 {/* Month + current badge */}
-                <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2">
+                <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2 mb-4">
                   {monthLabel(slideBooks[0].month)}
                   {slideBooks.some((b) => b.is_current) && (
                     <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
@@ -222,43 +231,70 @@ export default function BookOfTheMonth() {
                   )}
                 </p>
 
-                {/* One row per book in this month */}
+                {/* Books — first one full-size, extras compact below a divider */}
                 {slideBooks.map((b, bi) => (
-                  <div
-                    key={b.id}
-                    className={`flex flex-col md:flex-row gap-6 md:gap-8 items-start ${
-                      bi > 0 ? "pt-8 border-t border-parchment/10" : ""
-                    }`}
-                  >
-                    {/* Cover */}
-                    <div className="mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-2xl overflow-hidden border border-parchment/10">
-                      {b.cover_url ? (
-                        <img
-                          src={b.cover_url}
-                          alt={b.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-center p-4">
-                          <BookOpen className="w-10 h-10 text-lime/30 mx-auto mb-2" />
-                          <p className="text-xs text-parchment/30 font-sans">
-                            Cover
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                  <div key={b.id}>
+                    {bi > 0 && (
+                      <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-parchment/10" />
+                        <span className="text-parchment/30 text-[10px] uppercase tracking-widest font-sans">
+                          also
+                        </span>
+                        <div className="flex-1 h-px bg-parchment/10" />
+                      </div>
+                    )}
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug">
-                        {b.title}
-                      </h3>
-                      <p className="text-parchment/50 text-sm mb-4 font-sans">
-                        by {b.author}
-                      </p>
-                      <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
-                        {b.description}
-                      </p>
+                    <div
+                      className={`flex gap-4 items-start ${bi === 0 ? "flex-col md:flex-row md:gap-8" : "flex-row"}`}
+                    >
+                      {/* Cover */}
+                      <div
+                        className={`bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-xl overflow-hidden border border-parchment/10
+                        ${bi === 0 ? "mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56" : "w-12 h-16"}`}
+                      >
+                        {b.cover_url ? (
+                          <img
+                            src={b.cover_url}
+                            alt={b.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-center p-2">
+                            <BookOpen
+                              className={`text-lime/30 mx-auto ${bi === 0 ? "w-10 h-10 mb-2" : "w-4 h-4"}`}
+                            />
+                            {bi === 0 && (
+                              <p className="text-xs text-parchment/30 font-sans">
+                                Cover
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={`font-serif italic text-parchment leading-snug mb-1 ${bi === 0 ? "text-2xl md:text-3xl" : "text-base"}`}
+                        >
+                          {b.title}
+                        </h3>
+                        <p
+                          className={`text-parchment/50 font-sans ${bi === 0 ? "text-sm mb-4" : "text-xs mb-1"}`}
+                        >
+                          by {b.author}
+                        </p>
+                        {bi === 0 && (
+                          <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
+                            {b.description}
+                          </p>
+                        )}
+                        {bi > 0 && b.description && (
+                          <p className="text-parchment/50 font-sans text-xs line-clamp-2">
+                            {b.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
