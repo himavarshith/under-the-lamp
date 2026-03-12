@@ -185,9 +185,9 @@ export default function BookOfTheMonth() {
       )}
 
       {/* Carousel */}
-      <div className="flex-1 overflow-hidden">
+      <div className="overflow-hidden h-[272px] md:h-[232px]">
         <div
-          className="flex select-none"
+          className="flex select-none h-full"
           style={{
             transform: `translateX(calc(-${activeIdx * 100}% + ${dragOffset}px))`,
             transition: isDragging
@@ -200,9 +200,12 @@ export default function BookOfTheMonth() {
           onTouchEnd={handleTouchEnd}
         >
           {slides.map((slideBooks) => (
-            <div key={slideBooks[0].month} className="w-full shrink-0">
+            <div
+              key={slideBooks[0].month}
+              className="w-full h-full shrink-0 flex flex-col"
+            >
               {/* Month + current badge */}
-              <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2 mb-4">
+              <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2 mb-3 shrink-0">
                 {monthLabel(slideBooks[0].month)}
                 {slideBooks.some((b) => b.is_current) && (
                   <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
@@ -213,8 +216,11 @@ export default function BookOfTheMonth() {
 
               {slideBooks.length === 1 ? (
                 /* ── Single pick: full-size layout ── */
-                <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-                  <div className="mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-xl overflow-hidden border border-parchment/10">
+                <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch flex-1 min-h-0">
+                  <div
+                    className="mx-auto md:mx-0 w-44 md:w-40 shrink-0 self-start md:self-stretch bg-carbon-light rounded-xl flex items-center justify-center shadow-xl overflow-hidden border border-parchment/10"
+                    style={{ height: "100%", maxHeight: "224px" }}
+                  >
                     {slideBooks[0].cover_url ? (
                       <img
                         src={slideBooks[0].cover_url}
@@ -230,28 +236,29 @@ export default function BookOfTheMonth() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug">
+                  <div className="flex-1 min-w-0 flex flex-col min-h-0">
+                    <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug shrink-0">
                       {slideBooks[0].title}
                     </h3>
-                    <p className="text-parchment/50 text-sm mb-4 font-sans">
+                    <p className="text-parchment/50 text-sm mb-3 font-sans shrink-0">
                       by {slideBooks[0].author}
                     </p>
-                    <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
+                    <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base overflow-y-auto flex-1 min-h-0 pr-1 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none]">
                       {slideBooks[0].description}
                     </p>
                   </div>
                 </div>
               ) : (
-                /* ── Co-picks: side by side with vertical divider, same height as single ── */
-                <div className="flex items-stretch gap-0">
-                  {slideBooks.map((b, bi) => (
-                    <div key={b.id} className="flex items-stretch">
-                      {bi > 0 && (
-                        <div className="w-px bg-parchment/10 mx-4 self-stretch" />
-                      )}
-                      <div className="flex flex-col items-center gap-3 flex-1 min-w-0">
-                        <div className="w-24 h-32 md:w-28 md:h-36 bg-carbon-light rounded-lg flex items-center justify-center shrink-0 shadow-lg overflow-hidden border border-parchment/10">
+                /* ── Co-picks: side by side, each mirrors single-book layout at smaller scale ── */
+                <div className="flex items-stretch flex-1 min-h-0">
+                  {slideBooks.flatMap((b, bi) => {
+                    const bookEl = (
+                      <div
+                        key={b.id}
+                        className="flex-1 min-w-0 flex flex-col md:flex-row items-center md:items-start gap-3 md:gap-4"
+                      >
+                        {/* Cover */}
+                        <div className="w-20 h-28 md:w-[88px] md:h-[120px] bg-carbon-light rounded-lg flex items-center justify-center shrink-0 shadow-lg overflow-hidden border border-parchment/10">
                           {b.cover_url ? (
                             <img
                               src={b.cover_url}
@@ -259,20 +266,35 @@ export default function BookOfTheMonth() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <BookOpen className="w-6 h-6 text-lime/30" />
+                            <BookOpen className="w-5 h-5 text-lime/30" />
                           )}
                         </div>
-                        <div className="text-center min-w-0 px-1">
+                        {/* Text */}
+                        <div className="flex-1 min-w-0 text-center md:text-left">
                           <h3 className="font-serif italic text-parchment text-sm md:text-base leading-snug mb-0.5 line-clamp-2">
                             {b.title}
                           </h3>
-                          <p className="text-parchment/40 text-xs font-sans">
+                          <p className="text-parchment/40 text-xs font-sans mb-0 md:mb-2">
                             by {b.author}
+                          </p>
+                          <p
+                            className="hidden md:block text-parchment/60 text-xs leading-relaxed font-sans overflow-y-auto scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none]"
+                            style={{ maxHeight: "7rem" }}
+                          >
+                            {b.description}
                           </p>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                    if (bi === 0) return [bookEl];
+                    return [
+                      <div
+                        key={`divider-${bi}`}
+                        className="w-px bg-parchment/15 mx-4 md:mx-6 self-stretch shrink-0"
+                      />,
+                      bookEl,
+                    ];
+                  })}
                 </div>
               )}
             </div>
