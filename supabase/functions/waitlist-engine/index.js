@@ -130,7 +130,7 @@ function invitationEmailHtml(name, rsvpToken) {
 
     <!-- Footer -->
     <div style="background-color:#191B14;border-radius:0 0 16px 16px;padding:20px;text-align:center;">
-      <p style="color:#EFEDEB;font-size:11px;margin:0;letter-spacing:2px;text-transform:uppercase;">Under the Lamp Book Club &middot; One book, one lamp, one story at a time.</p>
+      <p style="color:#EFEDEB;font-size:11px;margin:0;letter-spacing:2px;text-transform:uppercase;">Under the Lamp Book Club.</p>
     </div>
   </div>
 </body>
