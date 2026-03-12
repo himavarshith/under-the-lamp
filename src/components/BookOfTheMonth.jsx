@@ -85,8 +85,9 @@ export default function BookOfTheMonth() {
       const list = data?.length ? data : DEMO_BOOKS;
       const grouped = groupByMonth(list);
       setSlides(grouped);
+      // After reversing, index 0 = newest. Use current book's index, else default to 0.
       const currentIdx = grouped.findIndex((s) => s.some((b) => b.is_current));
-      setActiveIdx(currentIdx >= 0 ? currentIdx : grouped.length - 1);
+      setActiveIdx(currentIdx >= 0 ? currentIdx : 0);
     }
     fetchBooks();
   }, []);
@@ -183,181 +184,126 @@ export default function BookOfTheMonth() {
         </div>
       )}
 
-      {/* Carousel with flanking arrows */}
-      <div className="flex items-center gap-3">
-        {/* Left arrow — desktop only */}
-        {n > 1 && (
-          <button
-            onClick={() => goTo(activeIdx - 1)}
-            disabled={activeIdx === 0}
-            aria-label="Previous book"
-            className="hidden md:flex shrink-0 w-9 h-9 rounded-full border border-parchment/20 items-center justify-center
-                       text-parchment/60 hover:text-parchment hover:bg-parchment/10 hover:border-parchment/40
-                       disabled:opacity-20 transition-all duration-200"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-        )}
+      {/* Carousel */}
+      <div className="flex-1 overflow-hidden">
+        <div
+          className="flex select-none"
+          style={{
+            transform: `translateX(calc(-${activeIdx * 100}% + ${dragOffset}px))`,
+            transition: isDragging
+              ? "none"
+              : "transform 350ms cubic-bezier(0.4, 0, 0.2, 1)",
+            willChange: "transform",
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {slides.map((slideBooks) => (
+            <div key={slideBooks[0].month} className="w-full shrink-0">
+              {/* Month + current badge */}
+              <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2 mb-4">
+                {monthLabel(slideBooks[0].month)}
+                {slideBooks.some((b) => b.is_current) && (
+                  <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
+                    Current
+                  </span>
+                )}
+              </p>
 
-        {/* Sliding track */}
-        <div className="flex-1 overflow-hidden">
-          <div
-            className="flex select-none"
-            style={{
-              transform: `translateX(calc(-${activeIdx * 100}% + ${dragOffset}px))`,
-              transition: isDragging
-                ? "none"
-                : "transform 350ms cubic-bezier(0.4, 0, 0.2, 1)",
-              willChange: "transform",
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            {slides.map((slideBooks) => (
-              <div key={slideBooks[0].month} className="w-full shrink-0">
-                {/* Month + current badge */}
-                <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2 mb-4">
-                  {monthLabel(slideBooks[0].month)}
-                  {slideBooks.some((b) => b.is_current) && (
-                    <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
-                      Current
-                    </span>
-                  )}
-                  {slideBooks.length > 1 && (
-                    <span className="text-parchment/40 text-[10px] font-sans normal-case tracking-normal">
-                      {slideBooks.length} co-picks
-                    </span>
-                  )}
-                </p>
-
-                {/* Books — first one full-size, extras compact below a divider */}
-                {slideBooks.map((b, bi) => (
-                  <div key={b.id}>
-                    {bi > 0 && (
-                      <div className="flex items-center gap-3 my-4">
-                        <div className="flex-1 h-px bg-parchment/10" />
-                        <span className="text-parchment/30 text-[10px] uppercase tracking-widest font-sans">
-                          also
-                        </span>
-                        <div className="flex-1 h-px bg-parchment/10" />
+              {slideBooks.length === 1 ? (
+                /* ── Single pick: full-size layout ── */
+                <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+                  <div className="mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-xl overflow-hidden border border-parchment/10">
+                    {slideBooks[0].cover_url ? (
+                      <img
+                        src={slideBooks[0].cover_url}
+                        alt={slideBooks[0].title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center p-4">
+                        <BookOpen className="w-10 h-10 text-lime/30 mx-auto mb-2" />
+                        <p className="text-xs text-parchment/30 font-sans">
+                          Cover
+                        </p>
                       </div>
                     )}
-
-                    <div
-                      className={`flex gap-4 items-start ${bi === 0 ? "flex-col md:flex-row md:gap-8" : "flex-row"}`}
-                    >
-                      {/* Cover */}
-                      <div
-                        className={`bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-xl overflow-hidden border border-parchment/10
-                        ${bi === 0 ? "mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56" : "w-12 h-16"}`}
-                      >
-                        {b.cover_url ? (
-                          <img
-                            src={b.cover_url}
-                            alt={b.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="text-center p-2">
-                            <BookOpen
-                              className={`text-lime/30 mx-auto ${bi === 0 ? "w-10 h-10 mb-2" : "w-4 h-4"}`}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug">
+                      {slideBooks[0].title}
+                    </h3>
+                    <p className="text-parchment/50 text-sm mb-4 font-sans">
+                      by {slideBooks[0].author}
+                    </p>
+                    <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
+                      {slideBooks[0].description}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* ── Co-picks: side by side with vertical divider, same height as single ── */
+                <div className="flex items-stretch gap-0">
+                  {slideBooks.map((b, bi) => (
+                    <div key={b.id} className="flex items-stretch">
+                      {bi > 0 && (
+                        <div className="w-px bg-parchment/10 mx-4 self-stretch" />
+                      )}
+                      <div className="flex flex-col items-center gap-3 flex-1 min-w-0">
+                        <div className="w-24 h-32 md:w-28 md:h-36 bg-carbon-light rounded-lg flex items-center justify-center shrink-0 shadow-lg overflow-hidden border border-parchment/10">
+                          {b.cover_url ? (
+                            <img
+                              src={b.cover_url}
+                              alt={b.title}
+                              className="w-full h-full object-cover"
                             />
-                            {bi === 0 && (
-                              <p className="text-xs text-parchment/30 font-sans">
-                                Cover
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className={`font-serif italic text-parchment leading-snug mb-1 ${bi === 0 ? "text-2xl md:text-3xl" : "text-base"}`}
-                        >
-                          {b.title}
-                        </h3>
-                        <p
-                          className={`text-parchment/50 font-sans ${bi === 0 ? "text-sm mb-4" : "text-xs mb-1"}`}
-                        >
-                          by {b.author}
-                        </p>
-                        {bi === 0 && (
-                          <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
-                            {b.description}
+                          ) : (
+                            <BookOpen className="w-6 h-6 text-lime/30" />
+                          )}
+                        </div>
+                        <div className="text-center min-w-0 px-1">
+                          <h3 className="font-serif italic text-parchment text-sm md:text-base leading-snug mb-0.5 line-clamp-2">
+                            {b.title}
+                          </h3>
+                          <p className="text-parchment/40 text-xs font-sans">
+                            by {b.author}
                           </p>
-                        )}
-                        {bi > 0 && b.description && (
-                          <p className="text-parchment/50 font-sans text-xs line-clamp-2">
-                            {b.description}
-                          </p>
-                        )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
-
-        {/* Right arrow — desktop only */}
-        {n > 1 && (
-          <button
-            onClick={() => goTo(activeIdx + 1)}
-            disabled={activeIdx === n - 1}
-            aria-label="Next book"
-            className="hidden md:flex shrink-0 w-9 h-9 rounded-full border border-parchment/20 items-center justify-center
-                       text-parchment/60 hover:text-parchment hover:bg-parchment/10 hover:border-parchment/40
-                       disabled:opacity-20 transition-all duration-200"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        )}
       </div>
 
-      {/* Dots + mobile arrows */}
+      {/* Bottom nav — prev/next with position counter */}
       {n > 1 && (
-        <div className="flex items-center justify-center gap-4 mt-6">
-          {/* Prev — mobile only */}
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-parchment/10">
           <button
             onClick={() => goTo(activeIdx - 1)}
             disabled={activeIdx === 0}
-            aria-label="Previous book"
-            className="md:hidden w-8 h-8 rounded-full border border-parchment/20 flex items-center justify-center
-                       text-parchment/60 hover:text-parchment hover:bg-parchment/10
-                       disabled:opacity-20 transition-all duration-200"
+            aria-label="Newer month"
+            className="flex items-center gap-1.5 text-xs font-sans text-parchment/50 hover:text-parchment disabled:opacity-20 transition"
           >
             <ChevronLeft className="w-4 h-4" />
+            Newer
           </button>
 
-          {/* Dots */}
-          <div className="flex items-center gap-1.5">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                aria-label={`Go to month ${i + 1}`}
-                className={`rounded-full transition-all duration-300 ${
-                  i === activeIdx
-                    ? "w-5 h-2 bg-lime"
-                    : "w-2 h-2 bg-parchment/25 hover:bg-parchment/50"
-                }`}
-              />
-            ))}
-          </div>
+          <span className="text-xs font-sans text-parchment/30">
+            {activeIdx + 1} / {n}
+          </span>
 
-          {/* Next — mobile only */}
           <button
             onClick={() => goTo(activeIdx + 1)}
             disabled={activeIdx === n - 1}
-            aria-label="Next book"
-            className="md:hidden w-8 h-8 rounded-full border border-parchment/20 flex items-center justify-center
-                       text-parchment/60 hover:text-parchment hover:bg-parchment/10
-                       disabled:opacity-20 transition-all duration-200"
+            aria-label="Older month"
+            className="flex items-center gap-1.5 text-xs font-sans text-parchment/50 hover:text-parchment disabled:opacity-20 transition"
           >
+            Older
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
