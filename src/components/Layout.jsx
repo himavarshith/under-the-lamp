@@ -63,8 +63,7 @@ export default function Layout() {
             </span>
           </div>
           <p className="text-xs font-sans">
-            A read-along, discussion-driven book club in Bangalore — one book,
-            one lamp, one story at a time.
+            A read-along, discussion-driven book club in Bangalore.
           </p>
         </div>
       </footer>

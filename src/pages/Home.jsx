@@ -23,8 +23,7 @@ export default function Home() {
 
           <p className="text-parchment/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-sans">
             A discussion-driven book club where readers meet once a month to
-            dive deep into great stories. One book, one lamp, one conversation
-            at a time.
+            dive deep into great stories.
           </p>
 
           <a
