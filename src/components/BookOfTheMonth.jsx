@@ -151,13 +151,13 @@ export default function BookOfTheMonth() {
 
       {/* Carousel with flanking arrows */}
       <div className="flex items-center gap-3">
-        {/* Left arrow */}
+        {/* Left arrow — desktop only */}
         {n > 1 && (
           <button
             onClick={() => goTo(activeIdx - 1)}
             disabled={activeIdx === 0}
             aria-label="Previous book"
-            className="shrink-0 w-9 h-9 rounded-full border border-parchment/20 flex items-center justify-center
+            className="hidden md:flex shrink-0 w-9 h-9 rounded-full border border-parchment/20 items-center justify-center
                        text-parchment/60 hover:text-parchment hover:bg-parchment/10 hover:border-parchment/40
                        disabled:opacity-20 transition-all duration-200"
           >
@@ -183,10 +183,10 @@ export default function BookOfTheMonth() {
             {books.map((b) => (
               <div
                 key={b.id}
-                className="w-full shrink-0 flex flex-col md:flex-row gap-8 items-start"
+                className="w-full shrink-0 flex flex-col md:flex-row gap-6 md:gap-8 items-start"
               >
-                {/* Cover */}
-                <div className="w-40 h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-2xl overflow-hidden border border-parchment/10">
+                {/* Cover — centred on mobile */}
+                <div className="mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-2xl overflow-hidden border border-parchment/10">
                   {b.cover_url ? (
                     <img
                       src={b.cover_url}
@@ -213,13 +213,13 @@ export default function BookOfTheMonth() {
                       </span>
                     )}
                   </p>
-                  <h3 className="font-serif italic text-3xl text-parchment mb-1 leading-snug">
+                  <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug">
                     {b.title}
                   </h3>
                   <p className="text-parchment/50 text-sm mb-4 font-sans">
                     by {b.author}
                   </p>
-                  <p className="text-parchment/70 leading-relaxed font-sans">
+                  <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
                     {b.description}
                   </p>
                 </div>
@@ -228,13 +228,13 @@ export default function BookOfTheMonth() {
           </div>
         </div>
 
-        {/* Right arrow */}
+        {/* Right arrow — desktop only */}
         {n > 1 && (
           <button
             onClick={() => goTo(activeIdx + 1)}
             disabled={activeIdx === n - 1}
             aria-label="Next book"
-            className="shrink-0 w-9 h-9 rounded-full border border-parchment/20 flex items-center justify-center
+            className="hidden md:flex shrink-0 w-9 h-9 rounded-full border border-parchment/20 items-center justify-center
                        text-parchment/60 hover:text-parchment hover:bg-parchment/10 hover:border-parchment/40
                        disabled:opacity-20 transition-all duration-200"
           >
@@ -243,21 +243,48 @@ export default function BookOfTheMonth() {
         )}
       </div>
 
-      {/* Dot indicators */}
+      {/* Dots + mobile arrows */}
       {n > 1 && (
-        <div className="flex items-center justify-center gap-1.5 mt-6">
-          {books.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`Go to book ${i + 1}`}
-              className={`rounded-full transition-all duration-300 ${
-                i === activeIdx
-                  ? "w-5 h-2 bg-lime"
-                  : "w-2 h-2 bg-parchment/25 hover:bg-parchment/50"
-              }`}
-            />
-          ))}
+        <div className="flex items-center justify-center gap-4 mt-6">
+          {/* Prev — mobile only */}
+          <button
+            onClick={() => goTo(activeIdx - 1)}
+            disabled={activeIdx === 0}
+            aria-label="Previous book"
+            className="md:hidden w-8 h-8 rounded-full border border-parchment/20 flex items-center justify-center
+                       text-parchment/60 hover:text-parchment hover:bg-parchment/10
+                       disabled:opacity-20 transition-all duration-200"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Dots */}
+          <div className="flex items-center gap-1.5">
+            {books.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                aria-label={`Go to book ${i + 1}`}
+                className={`rounded-full transition-all duration-300 ${
+                  i === activeIdx
+                    ? "w-5 h-2 bg-lime"
+                    : "w-2 h-2 bg-parchment/25 hover:bg-parchment/50"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Next — mobile only */}
+          <button
+            onClick={() => goTo(activeIdx + 1)}
+            disabled={activeIdx === n - 1}
+            aria-label="Next book"
+            className="md:hidden w-8 h-8 rounded-full border border-parchment/20 flex items-center justify-center
+                       text-parchment/60 hover:text-parchment hover:bg-parchment/10
+                       disabled:opacity-20 transition-all duration-200"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       )}
     </section>
