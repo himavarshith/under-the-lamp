@@ -185,9 +185,9 @@ export default function BookOfTheMonth() {
       )}
 
       {/* Carousel */}
-      <div className="overflow-hidden h-[272px] md:h-[232px]">
+      <div className="overflow-hidden">
         <div
-          className="flex select-none h-full"
+          className="flex select-none"
           style={{
             transform: `translateX(calc(-${activeIdx * 100}% + ${dragOffset}px))`,
             transition: isDragging
@@ -202,7 +202,7 @@ export default function BookOfTheMonth() {
           {slides.map((slideBooks) => (
             <div
               key={slideBooks[0].month}
-              className="w-full h-full shrink-0 flex flex-col"
+              className="w-full shrink-0 flex flex-col"
             >
               {/* Month + current badge */}
               <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2 mb-3 shrink-0">
@@ -215,12 +215,10 @@ export default function BookOfTheMonth() {
               </p>
 
               {slideBooks.length === 1 ? (
-                /* ── Single pick: full-size layout ── */
-                <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch flex-1 min-h-0">
-                  <div
-                    className="mx-auto md:mx-0 w-44 md:w-40 shrink-0 self-start md:self-stretch bg-carbon-light rounded-xl flex items-center justify-center shadow-xl overflow-hidden border border-parchment/10"
-                    style={{ height: "100%", maxHeight: "224px" }}
-                  >
+                /* ── Single pick: cover + text side by side ── */
+                <div className="flex flex-row gap-4 md:gap-8 items-start">
+                  {/* Cover — fixed 2:3 size */}
+                  <div className="w-28 h-[168px] md:w-[152px] md:h-[228px] shrink-0 bg-carbon-light rounded-xl flex items-center justify-center shadow-xl overflow-hidden border border-parchment/10">
                     {slideBooks[0].cover_url ? (
                       <img
                         src={slideBooks[0].cover_url}
@@ -236,16 +234,21 @@ export default function BookOfTheMonth() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0 flex flex-col min-h-0">
-                    <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug shrink-0">
+                  {/* Text — same height as cover so description can scroll within */}
+                  <div className="flex-1 min-w-0 flex flex-col h-[168px] md:h-[228px]">
+                    <h3 className="font-serif italic text-xl md:text-3xl text-parchment mb-1 leading-snug shrink-0">
                       {slideBooks[0].title}
                     </h3>
-                    <p className="text-parchment/50 text-sm mb-3 font-sans shrink-0">
+                    <p className="text-parchment/50 text-sm mb-2 font-sans shrink-0">
                       by {slideBooks[0].author}
                     </p>
-                    <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base overflow-y-auto flex-1 min-h-0 pr-1 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div
+                      className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base overflow-y-auto flex-1 min-h-0 pr-1 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none]"
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                    >
                       {slideBooks[0].description}
-                    </p>
+                    </div>
                   </div>
                 </div>
               ) : (
