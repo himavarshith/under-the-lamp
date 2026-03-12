@@ -824,22 +824,39 @@ function BookTab() {
   // ----- Google Books metadata fetch -----
   async function fetchBookMeta(title, author) {
     try {
-      const q = encodeURIComponent(`intitle:${title} inauthor:${author}`);
+      // Open Library search — free, no API key, no quota
+      const q = encodeURIComponent(`${title} ${author}`);
       const res = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`,
+        `https://openlibrary.org/search.json?q=${q}&limit=1&fields=title,cover_i,key,first_sentence`,
       );
       if (!res.ok) return null;
       const data = await res.json();
-      const info = data.items?.[0]?.volumeInfo;
-      if (!info) return null;
-      const rawCover =
-        info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null;
-      return {
-        description: info.description ?? "",
-        cover_url: rawCover
-          ? rawCover.replace("http://", "https://").replace("&edge=curl", "")
-          : null,
-      };
+      const doc = data.docs?.[0];
+      if (!doc) return null;
+
+      const cover_url = doc.cover_i
+        ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+        : null;
+
+      // Use first_sentence if available, otherwise fetch the work record for description
+      let description = "";
+      if (doc.first_sentence) {
+        const fs = doc.first_sentence;
+        description = Array.isArray(fs) ? fs[0] : (fs?.value ?? fs ?? "");
+      } else if (doc.key) {
+        try {
+          const workRes = await fetch(`https://openlibrary.org${doc.key}.json`);
+          if (workRes.ok) {
+            const work = await workRes.json();
+            const d = work.description;
+            description = typeof d === "string" ? d : (d?.value ?? "");
+          }
+        } catch {
+          // description stays empty
+        }
+      }
+
+      return { cover_url, description };
     } catch {
       return null;
     }
