@@ -820,6 +820,34 @@ function BookTab() {
   const [bulkSaving, setBulkSaving] = useState(false);
   const [fetchingMeta, setFetchingMeta] = useState(false);
   const [fetchingSingle, setFetchingSingle] = useState(false);
+  const [books, setBooks] = useState([]);
+  const { confirm, ConfirmDialog } = useConfirm();
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  async function fetchBooks() {
+    const { data } = await supabase
+      .from("books")
+      .select("id, title, author, month, cover_url")
+      .order("month", { ascending: false });
+    setBooks(data ?? []);
+  }
+
+  async function handleDeleteBook(book) {
+    const ok = await confirm(
+      `Delete "${book.title}" (${book.month.slice(0, 7)})? This cannot be undone.`,
+    );
+    if (!ok) return;
+    const { error } = await supabase.from("books").delete().eq("id", book.id);
+    if (error) {
+      toast(`Delete failed: ${error.message}`, "error");
+    } else {
+      toast("Book deleted.", "success");
+      fetchBooks();
+    }
+  }
 
   // ----- Google Books metadata fetch -----
   async function fetchBookMeta(title, author) {
@@ -1263,6 +1291,52 @@ function BookTab() {
           )}
         </form>
       )}
+
+      {/* ── Manage existing books ── */}
+      <div className="mt-8 pt-6 border-t border-parchment-dark">
+        {ConfirmDialog}
+        <h4 className="font-display text-sm uppercase font-bold tracking-wide text-carbon-muted mb-3">
+          All Books ({books.length})
+        </h4>
+        {books.length === 0 ? (
+          <p className="text-xs text-carbon-muted font-sans">
+            No books added yet.
+          </p>
+        ) : (
+          <div className="rounded-lg border border-parchment-dark overflow-hidden divide-y divide-parchment-dark">
+            {books.map((b) => (
+              <div key={b.id} className="flex items-center gap-3 px-3 py-2.5">
+                {b.cover_url ? (
+                  <img
+                    src={b.cover_url}
+                    alt={b.title}
+                    className="w-8 h-11 object-cover rounded shrink-0 border border-parchment-dark"
+                  />
+                ) : (
+                  <div className="w-8 h-11 rounded bg-parchment flex items-center justify-center shrink-0">
+                    <BookOpen className="w-3 h-3 text-carbon-muted/40" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium font-sans text-carbon truncate">
+                    {b.title}
+                  </p>
+                  <p className="text-xs text-carbon-muted font-sans">
+                    {b.author} &middot; {b.month.slice(0, 7)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDeleteBook(b)}
+                  className="shrink-0 p-1.5 rounded-lg text-carbon-muted hover:text-red-600 hover:bg-red-50 transition"
+                  title="Delete book"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -218,7 +218,7 @@ export default function BookOfTheMonth() {
                 /* ── Single pick: cover + text side by side ── */
                 <div className="flex flex-row gap-4 md:gap-8 items-start">
                   {/* Cover — fixed 2:3 size */}
-                  <div className="w-28 h-[168px] md:w-[152px] md:h-[228px] shrink-0 bg-carbon-light rounded-xl flex items-center justify-center shadow-xl overflow-hidden border border-parchment/10">
+                  <div className="w-36 h-[224px] md:w-[152px] md:h-[228px] shrink-0 bg-carbon-light rounded-xl flex items-center justify-center shadow-xl overflow-hidden border border-parchment/10">
                     {slideBooks[0].cover_url ? (
                       <img
                         src={slideBooks[0].cover_url}
@@ -235,7 +235,7 @@ export default function BookOfTheMonth() {
                     )}
                   </div>
                   {/* Text — same height as cover so description can scroll within */}
-                  <div className="flex-1 min-w-0 flex flex-col h-[168px] md:h-[228px]">
+                  <div className="flex-1 min-w-0 flex flex-col h-[224px] md:h-[228px]">
                     <h3 className="font-serif italic text-xl md:text-3xl text-parchment mb-1 leading-snug shrink-0">
                       {slideBooks[0].title}
                     </h3>
