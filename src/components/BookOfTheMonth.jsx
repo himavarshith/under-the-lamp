@@ -121,11 +121,11 @@ export default function BookOfTheMonth() {
   }
 
   return (
-    <section className="bg-brand-blue rounded-3xl p-8 md:p-12 text-parchment">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-6">
+    <section className="bg-brand-blue rounded-3xl p-6 md:p-12 text-parchment">
+      {/* Header row — stacks on mobile, inline on desktop */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-lime" />
+          <BookOpen className="w-5 h-5 text-lime shrink-0" />
           <span className="text-xs uppercase tracking-widest font-display font-bold bg-lime text-carbon px-3 py-1 rounded-full">
             Book of the Month
           </span>
@@ -136,7 +136,7 @@ export default function BookOfTheMonth() {
           <select
             value={activeIdx}
             onChange={(e) => goTo(Number(e.target.value))}
-            className="bg-brand-blue-dark text-parchment text-xs rounded-lg px-3 py-1.5 border border-parchment/20
+            className="self-start md:self-auto bg-brand-blue-dark text-parchment text-xs rounded-lg px-3 py-1.5 border border-parchment/20
                        focus:outline-none focus:ring-2 focus:ring-lime/40 font-sans cursor-pointer"
           >
             {books.map((b, i) => (
