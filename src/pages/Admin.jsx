@@ -797,6 +797,7 @@ function PhotoUploadTab() {
 
 // ----- Book Management Tab -----
 function BookTab() {
+  const [mode, setMode] = useState("single"); // 'single' | 'bulk'
   const [form, setForm] = useState({
     title: "",
     author: "",
@@ -813,11 +814,117 @@ function BookTab() {
   const fileInputRef = useRef(null);
   const { toast, ToastContainer } = useToast();
 
+  // ----- Bulk import state -----
+  const [bulkText, setBulkText] = useState("");
+  const [bulkParsed, setBulkParsed] = useState([]); // { month, title, author, description, cover_url }
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [fetchingMeta, setFetchingMeta] = useState(false);
+  const [fetchingSingle, setFetchingSingle] = useState(false);
+
+  // ----- Google Books metadata fetch -----
+  async function fetchBookMeta(title, author) {
+    try {
+      const q = encodeURIComponent(`intitle:${title} inauthor:${author}`);
+      const res = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`,
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const info = data.items?.[0]?.volumeInfo;
+      if (!info) return null;
+      const rawCover =
+        info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null;
+      return {
+        description: info.description ?? "",
+        cover_url: rawCover
+          ? rawCover.replace("http://", "https://").replace("&edge=curl", "")
+          : null,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function parseBulk(raw) {
+    return raw
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"))
+      .map((line) => {
+        const parts = line.split("|").map((p) => p.trim());
+        if (parts.length < 3) return null;
+        const [month, title, author, description = ""] = parts;
+        if (!month.match(/^\d{4}-\d{2}$/)) return null;
+        return { month, title, author, description };
+      })
+      .filter(Boolean);
+  }
+
+  const fetchAllMeta = async () => {
+    if (!bulkParsed.length) return;
+    setFetchingMeta(true);
+    const enriched = await Promise.all(
+      bulkParsed.map(async (b) => {
+        if (b.cover_url && b.description) return b; // already has data
+        const meta = await fetchBookMeta(b.title, b.author);
+        return {
+          ...b,
+          description: b.description || meta?.description || "",
+          cover_url: b.cover_url || meta?.cover_url || null,
+        };
+      }),
+    );
+    setBulkParsed(enriched);
+    setFetchingMeta(false);
+  };
+
+  const handleBulkImport = async () => {
+    if (!bulkParsed.length) return;
+    setBulkSaving(true);
+    const rows = bulkParsed.map((b) => ({
+      title: b.title,
+      author: b.author,
+      description: b.description || null,
+      cover_url: b.cover_url || null,
+      month: b.month + "-01",
+      is_current: false,
+    }));
+    const { error } = await supabase
+      .from("books")
+      .upsert(rows, { onConflict: "month" });
+    setBulkSaving(false);
+    if (error) {
+      toast(`Import failed: ${error.message}`, "error");
+    } else {
+      toast(`${rows.length} book(s) imported!`, "success");
+      setBulkText("");
+      setBulkParsed([]);
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
+  };
+
+  const handleFetchSingle = async () => {
+    if (!form.title || !form.author) return;
+    setFetchingSingle(true);
+    const meta = await fetchBookMeta(form.title, form.author);
+    setFetchingSingle(false);
+    if (!meta) {
+      toast("Couldn't find metadata for this book.", "error");
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      description: prev.description || meta.description,
+      cover_url: prev.cover_url || meta.cover_url || "",
+    }));
+    if (meta.cover_url) setCoverMode("url");
+    toast("Metadata fetched!", "success");
   };
 
   const handleSubmit = async (e) => {
@@ -875,129 +982,264 @@ function BookTab() {
   return (
     <div className="bg-white rounded-xl p-6 border border-parchment-dark">
       {ToastContainer}
-      <h3 className="font-display text-lg mb-4 flex items-center gap-2 uppercase font-bold">
-        <BookOpen className="w-4 h-4 text-lime" />
-        Set Book of the Month
-      </h3>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="Book title"
-            required
-            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
-          />
-          <input
-            type="text"
-            value={form.author}
-            onChange={(e) => setForm({ ...form, author: e.target.value })}
-            placeholder="Author"
-            required
-            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
-          />
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-display text-lg flex items-center gap-2 uppercase font-bold">
+          <BookOpen className="w-4 h-4 text-lime" />
+          {mode === "single" ? "Set Book of the Month" : "Bulk Import Books"}
+        </h3>
+        <div className="flex rounded-lg overflow-hidden border border-parchment-dark text-xs font-sans">
+          <button
+            type="button"
+            onClick={() => setMode("single")}
+            className={`px-3 py-1.5 transition ${mode === "single" ? "bg-carbon text-parchment" : "bg-white text-carbon-muted hover:bg-parchment"}`}
+          >
+            Single
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("bulk")}
+            className={`px-3 py-1.5 transition ${mode === "bulk" ? "bg-carbon text-parchment" : "bg-white text-carbon-muted hover:bg-parchment"}`}
+          >
+            Bulk import
+          </button>
         </div>
-        <textarea
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder="Brief description..."
-          rows={3}
-          className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 resize-none font-sans"
-        />
+      </div>
 
-        {/* Cover image — URL or upload toggle */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-carbon-muted font-sans uppercase tracking-wide">
-              Cover image
-            </span>
-            <div className="flex rounded-lg overflow-hidden border border-parchment-dark text-xs font-sans">
+      {mode === "bulk" ? (
+        <div className="space-y-4">
+          <p className="text-xs text-carbon-muted font-sans leading-relaxed">
+            Paste one book per line in this format:
+          </p>
+          <pre className="bg-parchment rounded-lg px-4 py-3 text-xs font-mono text-carbon overflow-x-auto">
+            {`YYYY-MM | Title | Author | Description (optional)
+
+# Example:
+2025-06 | The Remains of the Day | Kazuo Ishiguro | A butler reflects on his life.
+2025-07 | Station Eleven | Emily St. John Mandel`}
+          </pre>
+          <textarea
+            value={bulkText}
+            onChange={(e) => {
+              setBulkText(e.target.value);
+              setBulkParsed(parseBulk(e.target.value));
+            }}
+            rows={8}
+            placeholder="2025-06 | The Remains of the Day | Kazuo Ishiguro | Description..."
+            className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-blue/30 resize-y"
+          />
+
+          {bulkParsed.length > 0 && (
+            <>
               <button
                 type="button"
-                onClick={() => setCoverMode("url")}
-                className={`px-3 py-1 transition ${coverMode === "url" ? "bg-brand-blue text-white" : "bg-white text-carbon-muted hover:bg-parchment"}`}
+                onClick={fetchAllMeta}
+                disabled={fetchingMeta}
+                className="flex items-center gap-2 text-xs font-sans font-medium px-3 py-1.5 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue/5 disabled:opacity-40 transition"
               >
-                Paste URL
+                {fetchingMeta ? (
+                  <span className="w-3 h-3 border border-brand-blue border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <BookOpen className="w-3 h-3" />
+                )}
+                {fetchingMeta
+                  ? "Fetching metadata…"
+                  : "Auto-fetch covers & descriptions"}
               </button>
-              <button
-                type="button"
-                onClick={() => setCoverMode("upload")}
-                className={`px-3 py-1 transition ${coverMode === "upload" ? "bg-brand-blue text-white" : "bg-white text-carbon-muted hover:bg-parchment"}`}
-              >
-                Upload file
-              </button>
-            </div>
+
+              <div className="rounded-lg border border-parchment-dark overflow-hidden text-sm">
+                <div className="bg-parchment px-3 py-2 text-xs font-sans font-bold uppercase tracking-wide text-carbon-muted">
+                  Preview — {bulkParsed.length} book(s) to import
+                </div>
+                <div className="divide-y divide-parchment-dark">
+                  {bulkParsed.map((b, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 px-3 py-2.5"
+                    >
+                      {b.cover_url ? (
+                        <img
+                          src={b.cover_url}
+                          alt={b.title}
+                          className="w-8 h-11 object-cover rounded shrink-0 border border-parchment-dark"
+                        />
+                      ) : (
+                        <div className="w-8 h-11 rounded bg-parchment-dark shrink-0 flex items-center justify-center">
+                          <BookOpen className="w-3 h-3 text-carbon-muted/40" />
+                        </div>
+                      )}
+                      <span className="shrink-0 text-xs text-carbon-muted font-mono">
+                        {b.month}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-carbon font-sans truncate">
+                          {b.title}
+                        </p>
+                        <p className="text-xs text-carbon-muted font-sans">
+                          by {b.author}
+                        </p>
+                        {b.description && (
+                          <p className="text-xs text-carbon-muted/60 font-sans truncate mt-0.5">
+                            {b.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={handleBulkImport}
+            disabled={!bulkParsed.length || bulkSaving}
+            className="bg-lime hover:bg-lime-dark disabled:opacity-50 text-carbon font-display font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition text-sm"
+          >
+            {bulkSaving
+              ? "Importing…"
+              : `Import ${bulkParsed.length || 0} Book(s)`}
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="Book title"
+              required
+              className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
+            />
+            <input
+              type="text"
+              value={form.author}
+              onChange={(e) => setForm({ ...form, author: e.target.value })}
+              placeholder="Author"
+              required
+              className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
+            />
           </div>
 
-          {coverMode === "url" ? (
-            <input
-              type="url"
-              value={form.cover_url}
-              onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
-              placeholder="https://... (optional)"
-              className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
-            />
-          ) : (
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-lg border-2 border-dashed border-parchment-dark text-sm text-carbon-muted hover:border-brand-blue hover:text-brand-blue transition font-sans"
-              >
-                {coverFile ? coverFile.name : "Choose image…"}
-              </button>
-              {coverPreview && (
-                <img
-                  src={coverPreview}
-                  alt="preview"
-                  className="w-12 h-16 object-cover rounded-lg border border-parchment-dark"
-                />
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
-          )}
-        </div>
+          {/* Auto-fetch metadata */}
+          <button
+            type="button"
+            onClick={handleFetchSingle}
+            disabled={!form.title || !form.author || fetchingSingle}
+            className="flex items-center gap-2 text-xs font-sans font-medium px-3 py-1.5 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue/5 disabled:opacity-40 transition"
+          >
+            {fetchingSingle ? (
+              <span className="w-3 h-3 border border-brand-blue border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <BookOpen className="w-3 h-3" />
+            )}
+            {fetchingSingle ? "Fetching…" : "Auto-fetch cover & description"}
+          </button>
 
-        <input
-          type="month"
-          value={form.month}
-          onChange={(e) => setForm({ ...form, month: e.target.value })}
-          required
-          className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
-        />
-
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={form.setAsCurrent}
-            onChange={(e) =>
-              setForm({ ...form, setAsCurrent: e.target.checked })
-            }
-            className="w-4 h-4 accent-brand-blue"
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="Brief description..."
+            rows={3}
+            className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 resize-none font-sans"
           />
-          <span className="text-sm text-carbon font-sans">
-            Set as current book
-          </span>
-        </label>
 
-        <button
-          type="submit"
-          disabled={uploading}
-          className="bg-lime hover:bg-lime-dark disabled:opacity-60 text-carbon font-display font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition text-sm"
-        >
-          {uploading ? "Saving…" : "Save Book"}
-        </button>
-        {saved && (
-          <span className="text-carbon font-sans text-sm ml-3">✓ Saved!</span>
-        )}
-      </form>
+          {/* Cover image — URL or upload toggle */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-carbon-muted font-sans uppercase tracking-wide">
+                Cover image
+              </span>
+              <div className="flex rounded-lg overflow-hidden border border-parchment-dark text-xs font-sans">
+                <button
+                  type="button"
+                  onClick={() => setCoverMode("url")}
+                  className={`px-3 py-1 transition ${coverMode === "url" ? "bg-brand-blue text-white" : "bg-white text-carbon-muted hover:bg-parchment"}`}
+                >
+                  Paste URL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCoverMode("upload")}
+                  className={`px-3 py-1 transition ${coverMode === "upload" ? "bg-brand-blue text-white" : "bg-white text-carbon-muted hover:bg-parchment"}`}
+                >
+                  Upload file
+                </button>
+              </div>
+            </div>
+
+            {coverMode === "url" ? (
+              <input
+                type="url"
+                value={form.cover_url}
+                onChange={(e) =>
+                  setForm({ ...form, cover_url: e.target.value })
+                }
+                placeholder="https://... (optional)"
+                className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
+              />
+            ) : (
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 rounded-lg border-2 border-dashed border-parchment-dark text-sm text-carbon-muted hover:border-brand-blue hover:text-brand-blue transition font-sans"
+                >
+                  {coverFile ? coverFile.name : "Choose image…"}
+                </button>
+                {coverPreview && (
+                  <img
+                    src={coverPreview}
+                    alt="preview"
+                    className="w-12 h-16 object-cover rounded-lg border border-parchment-dark"
+                  />
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+            )}
+          </div>
+
+          <input
+            type="month"
+            value={form.month}
+            onChange={(e) => setForm({ ...form, month: e.target.value })}
+            required
+            className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
+          />
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={form.setAsCurrent}
+              onChange={(e) =>
+                setForm({ ...form, setAsCurrent: e.target.checked })
+              }
+              className="w-4 h-4 accent-brand-blue"
+            />
+            <span className="text-sm text-carbon font-sans">
+              Set as current book
+            </span>
+          </label>
+
+          <button
+            type="submit"
+            disabled={uploading}
+            className="bg-lime hover:bg-lime-dark disabled:opacity-60 text-carbon font-display font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition text-sm"
+          >
+            {uploading ? "Saving…" : "Save Book"}
+          </button>
+          {saved && (
+            <span className="text-carbon font-sans text-sm ml-3">✓ Saved!</span>
+          )}
+        </form>
+      )}
     </div>
   );
 }
