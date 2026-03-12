@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, supabaseUrl } from "../lib/supabase";
 import {
   Shield,
@@ -16,7 +16,97 @@ import {
   Clock,
   Eye,
   EyeOff,
+  AlertTriangle,
+  X,
 } from "lucide-react";
+
+// ----- Custom confirm dialog -----
+function useConfirm() {
+  const [dialog, setDialog] = useState(null);
+
+  const confirm = useCallback(
+    (message) =>
+      new Promise((resolve) => {
+        setDialog({ message, resolve });
+      }),
+    [],
+  );
+
+  const handleOk = () => {
+    dialog?.resolve(true);
+    setDialog(null);
+  };
+  const handleCancel = () => {
+    dialog?.resolve(false);
+    setDialog(null);
+  };
+
+  const ConfirmDialog = dialog ? (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-carbon/50 backdrop-blur-sm px-4 pb-6 sm:pb-0">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-[fadeUp_150ms_ease-out]">
+        <div className="flex items-start gap-3 mb-5">
+          <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
+          </div>
+          <p className="font-sans text-sm text-carbon leading-relaxed pt-1.5">
+            {dialog.message}
+          </p>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={handleCancel}
+            className="px-4 py-2 rounded-xl text-sm font-sans font-medium text-carbon/60 hover:text-carbon hover:bg-parchment transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleOk}
+            className="px-4 py-2 rounded-xl text-sm font-sans font-bold bg-carbon text-parchment hover:bg-carbon/80 transition"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  return { confirm, ConfirmDialog };
+}
+
+// ----- Toast notifications -----
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+
+  const toast = useCallback((message, type = "info") => {
+    const id = Date.now();
+    setToasts((t) => [...t, { id, message, type }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
+  }, []);
+
+  const dismiss = (id) => setToasts((t) => t.filter((x) => x.id !== id));
+
+  const ToastContainer = (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none">
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className={`flex items-start gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-sans pointer-events-auto
+            ${t.type === "error" ? "bg-red-600 text-white" : t.type === "success" ? "bg-carbon text-lime" : "bg-carbon text-parchment"}`}
+        >
+          <span className="flex-1 leading-snug">{t.message}</span>
+          <button
+            onClick={() => dismiss(t.id)}
+            className="opacity-60 hover:opacity-100 transition shrink-0 mt-0.5"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+
+  return { toast, ToastContainer };
+}
 
 const ADMIN_PASSWORD = "under-the-lamp-2026"; // In production, use Supabase Auth
 
@@ -168,6 +258,8 @@ function AdminLogin({ onLogin }) {
 function WaitlistTab() {
   const [waitlist, setWaitlist] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { confirm, ConfirmDialog } = useConfirm();
+  const { toast, ToastContainer } = useToast();
 
   useEffect(() => {
     async function fetchWaitlist() {
@@ -219,20 +311,21 @@ function WaitlistTab() {
   };
 
   const remove = async (item) => {
-    if (!confirm(`Remove ${item.name} from the waitlist?`)) return;
+    if (!(await confirm(`Remove ${item.name} from the waitlist?`))) return;
     const { error } = await supabase
       .from("waitlist")
       .delete()
       .eq("id", item.id);
     if (error) {
-      alert(`❌ ${error.message}`);
+      toast(`❌ ${error.message}`, "error");
       return;
     }
     setWaitlist(waitlist.filter((w) => w.id !== item.id));
   };
 
   const triggerInvite = async (item) => {
-    if (!confirm(`Send invitation to ${item.name} (${item.email})?`)) return;
+    if (!(await confirm(`Send invitation to ${item.name} (${item.email})?`)))
+      return;
     try {
       const res = await fetch(
         `${supabaseUrl}/functions/v1/send-monthly-invites`,
@@ -245,9 +338,9 @@ function WaitlistTab() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
       await refreshWaitlist();
-      alert(`✅ Invitation sent to ${item.name}!`);
+      toast(`Invitation sent to ${item.name}!`, "success");
     } catch (err) {
-      alert(`❌ Error: ${err.message || JSON.stringify(err)}`);
+      toast(`Error: ${err.message || JSON.stringify(err)}`, "error");
     }
   };
 
@@ -262,7 +355,11 @@ function WaitlistTab() {
   };
 
   const triggerMonthlyRound = async () => {
-    if (!confirm(`Send invitations to the top 4 people currently waiting?`))
+    if (
+      !(await confirm(
+        `Send invitations to the top 4 people currently waiting?`,
+      ))
+    )
       return;
 
     setSending(true);
@@ -280,10 +377,10 @@ function WaitlistTab() {
       console.log("[UTL] Response:", data);
       if (!res.ok) throw new Error(data.error || "Request failed");
       await refreshWaitlist();
-      alert(`✅ Sent ${data?.invited ?? 0} invitation(s)!`);
+      toast(`Sent ${data?.invited ?? 0} invitation(s)!`, "success");
     } catch (err) {
       console.error("[UTL] Error:", err);
-      alert(`❌ Error: ${err.message || JSON.stringify(err)}`);
+      toast(`Error: ${err.message || JSON.stringify(err)}`, "error");
     } finally {
       setSending(false);
     }
@@ -305,6 +402,8 @@ function WaitlistTab() {
 
   return (
     <div>
+      {ConfirmDialog}
+      {ToastContainer}
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
@@ -414,6 +513,8 @@ function PhotoUploadTab() {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [photosMap, setPhotosMap] = useState({});
+  const { confirm, ConfirmDialog } = useConfirm();
+  const { toast, ToastContainer } = useToast();
 
   const loadPhotos = async (albumId) => {
     const { data } = await supabase
@@ -425,10 +526,11 @@ function PhotoUploadTab() {
   };
 
   const deleteAlbum = async (album) => {
-    if (!confirm(`Delete album "${album.title}" and all its photos?`)) return;
+    if (!(await confirm(`Delete album "${album.title}" and all its photos?`)))
+      return;
     const { error } = await supabase.from("albums").delete().eq("id", album.id);
     if (error) {
-      alert(`❌ ${error.message}`);
+      toast(`❌ ${error.message}`, "error");
       return;
     }
     setAlbums(albums.filter((a) => a.id !== album.id));
@@ -436,10 +538,10 @@ function PhotoUploadTab() {
   };
 
   const deletePhoto = async (photo) => {
-    if (!confirm("Delete this photo?")) return;
+    if (!(await confirm("Delete this photo?"))) return;
     const { error } = await supabase.from("photos").delete().eq("id", photo.id);
     if (error) {
-      alert(`❌ ${error.message}`);
+      toast(`❌ ${error.message}`, "error");
       return;
     }
     setPhotosMap((prev) => ({
@@ -475,7 +577,7 @@ function PhotoUploadTab() {
       setNewAlbumTitle("");
       setNewAlbumMonth("");
     } else {
-      alert(error?.message || "Failed to create album");
+      toast(error?.message || "Failed to create album", "error");
     }
   };
 
@@ -497,7 +599,7 @@ function PhotoUploadTab() {
 
       if (uploadError) {
         console.error("[UTL] Storage upload error:", uploadError);
-        alert(`❌ Upload failed: ${uploadError.message}`);
+        toast(`Upload failed: ${uploadError.message}`, "error");
         setUploading(false);
         return;
       }
@@ -519,7 +621,7 @@ function PhotoUploadTab() {
 
       if (insertError) {
         console.error("[UTL] DB insert error:", insertError);
-        alert(`❌ DB insert failed: ${insertError.message}`);
+        toast(`DB insert failed: ${insertError.message}`, "error");
         setUploading(false);
         return;
       }
@@ -537,6 +639,8 @@ function PhotoUploadTab() {
 
   return (
     <div className="space-y-6">
+      {ConfirmDialog}
+      {ToastContainer}
       {/* Create Album */}
       <div className="bg-white rounded-xl p-6 border border-parchment-dark">
         <h3 className="font-display text-lg mb-4 flex items-center gap-2 uppercase font-bold">
@@ -707,6 +811,7 @@ function BookTab() {
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
   const fileInputRef = useRef(null);
+  const { toast, ToastContainer } = useToast();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -729,7 +834,7 @@ function BookTab() {
         .from("photos")
         .upload(path, coverFile, { contentType: coverFile.type });
       if (upErr) {
-        alert(`Upload failed: ${upErr.message}`);
+        toast(`Upload failed: ${upErr.message}`, "error");
         setUploading(false);
         return;
       }
@@ -769,6 +874,7 @@ function BookTab() {
 
   return (
     <div className="bg-white rounded-xl p-6 border border-parchment-dark">
+      {ToastContainer}
       <h3 className="font-display text-lg mb-4 flex items-center gap-2 uppercase font-bold">
         <BookOpen className="w-4 h-4 text-lime" />
         Set Book of the Month
