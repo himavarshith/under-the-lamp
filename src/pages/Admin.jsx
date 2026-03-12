@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase, supabaseUrl } from "../lib/supabase";
 import {
   Shield,
@@ -700,23 +700,56 @@ function BookTab() {
     cover_url: "",
     month: "",
   });
+  const [coverMode, setCoverMode] = useState("url"); // 'url' | 'upload'
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setUploading(true);
+
+    let finalCoverUrl = form.cover_url || null;
+
+    // Upload file if chosen
+    if (coverMode === "upload" && coverFile) {
+      const ext = coverFile.name.split(".").pop();
+      const path = `covers/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("photos")
+        .upload(path, coverFile, { contentType: coverFile.type });
+      if (upErr) {
+        alert(`Upload failed: ${upErr.message}`);
+        setUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage
+        .from("photos")
+        .getPublicUrl(path);
+      finalCoverUrl = urlData.publicUrl;
+    }
+
     const { error } = await supabase.from("books").upsert(
       {
         title: form.title,
         author: form.author,
         description: form.description,
-        cover_url: form.cover_url || null,
+        cover_url: finalCoverUrl,
         month: form.month + "-01",
         is_current: true,
       },
       { onConflict: "month" },
     );
 
-    // Unset previous current book
     if (!error) {
       await supabase
         .from("books")
@@ -724,7 +757,10 @@ function BookTab() {
         .neq("month", form.month + "-01");
 
       setSaved(true);
+      setUploading(false);
       setTimeout(() => setSaved(false), 3000);
+    } else {
+      setUploading(false);
     }
   };
 
@@ -760,32 +796,83 @@ function BookTab() {
           rows={3}
           className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 resize-none font-sans"
         />
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="url"
-            value={form.cover_url}
-            onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
-            placeholder="Cover image URL (optional)"
-            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
-          />
-          <input
-            type="month"
-            value={form.month}
-            onChange={(e) => setForm({ ...form, month: e.target.value })}
-            required
-            className="px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
-          />
+
+        {/* Cover image — URL or upload toggle */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs text-carbon-muted font-sans uppercase tracking-wide">
+              Cover image
+            </span>
+            <div className="flex rounded-lg overflow-hidden border border-parchment-dark text-xs font-sans">
+              <button
+                type="button"
+                onClick={() => setCoverMode("url")}
+                className={`px-3 py-1 transition ${coverMode === "url" ? "bg-brand-blue text-white" : "bg-white text-carbon-muted hover:bg-parchment"}`}
+              >
+                Paste URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverMode("upload")}
+                className={`px-3 py-1 transition ${coverMode === "upload" ? "bg-brand-blue text-white" : "bg-white text-carbon-muted hover:bg-parchment"}`}
+              >
+                Upload file
+              </button>
+            </div>
+          </div>
+
+          {coverMode === "url" ? (
+            <input
+              type="url"
+              value={form.cover_url}
+              onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
+              placeholder="https://... (optional)"
+              className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
+            />
+          ) : (
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 rounded-lg border-2 border-dashed border-parchment-dark text-sm text-carbon-muted hover:border-brand-blue hover:text-brand-blue transition font-sans"
+              >
+                {coverFile ? coverFile.name : "Choose image…"}
+              </button>
+              {coverPreview && (
+                <img
+                  src={coverPreview}
+                  alt="preview"
+                  className="w-12 h-16 object-cover rounded-lg border border-parchment-dark"
+                />
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
+          )}
         </div>
+
+        <input
+          type="month"
+          value={form.month}
+          onChange={(e) => setForm({ ...form, month: e.target.value })}
+          required
+          className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
+        />
+
         <button
           type="submit"
-          className="bg-lime hover:bg-lime-dark text-carbon font-display font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition text-sm"
+          disabled={uploading}
+          className="bg-lime hover:bg-lime-dark disabled:opacity-60 text-carbon font-display font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition text-sm"
         >
-          Save Book
+          {uploading ? "Saving…" : "Save Book"}
         </button>
         {saved && (
-          <span className="text-carbon font-sans text-sm ml-3">
-            &#10003; Saved!
-          </span>
+          <span className="text-carbon font-sans text-sm ml-3">✓ Saved!</span>
         )}
       </form>
     </div>
