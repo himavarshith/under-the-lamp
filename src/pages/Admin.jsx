@@ -699,6 +699,7 @@ function BookTab() {
     description: "",
     cover_url: "",
     month: "",
+    setAsCurrent: true,
   });
   const [coverMode, setCoverMode] = useState("url"); // 'url' | 'upload'
   const [coverFile, setCoverFile] = useState(null);
@@ -745,16 +746,18 @@ function BookTab() {
         description: form.description,
         cover_url: finalCoverUrl,
         month: form.month + "-01",
-        is_current: true,
+        is_current: form.setAsCurrent,
       },
       { onConflict: "month" },
     );
 
     if (!error) {
-      await supabase
-        .from("books")
-        .update({ is_current: false })
-        .neq("month", form.month + "-01");
+      if (form.setAsCurrent) {
+        await supabase
+          .from("books")
+          .update({ is_current: false })
+          .neq("month", form.month + "-01");
+      }
 
       setSaved(true);
       setUploading(false);
@@ -863,6 +866,20 @@ function BookTab() {
           required
           className="w-full px-3 py-2 rounded-lg border border-parchment-dark text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 font-sans"
         />
+
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={form.setAsCurrent}
+            onChange={(e) =>
+              setForm({ ...form, setAsCurrent: e.target.checked })
+            }
+            className="w-4 h-4 accent-brand-blue"
+          />
+          <span className="text-sm text-carbon font-sans">
+            Set as current book
+          </span>
+        </label>
 
         <button
           type="submit"
