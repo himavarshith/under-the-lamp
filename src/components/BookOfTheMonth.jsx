@@ -122,32 +122,40 @@ export default function BookOfTheMonth() {
 
   return (
     <section className="bg-brand-blue rounded-3xl p-6 md:p-12 text-parchment">
-      {/* Header row — stacks on mobile, inline on desktop */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-lime shrink-0" />
-          <span className="text-xs uppercase tracking-widest font-display font-bold bg-lime text-carbon px-3 py-1 rounded-full">
-            Book of the Month
-          </span>
-        </div>
-
-        {/* Month picker dropdown */}
-        {n > 1 && (
-          <select
-            value={activeIdx}
-            onChange={(e) => goTo(Number(e.target.value))}
-            className="self-start md:self-auto bg-brand-blue-dark text-parchment text-xs rounded-lg px-3 py-1.5 border border-parchment/20
-                       focus:outline-none focus:ring-2 focus:ring-lime/40 font-sans cursor-pointer"
-          >
-            {books.map((b, i) => (
-              <option key={b.id} value={i}>
-                {monthLabel(b.month)}
-                {b.is_current ? " · Current" : ""}
-              </option>
-            ))}
-          </select>
-        )}
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <BookOpen className="w-5 h-5 text-lime shrink-0" />
+        <span className="text-xs uppercase tracking-widest font-display font-bold bg-lime text-carbon px-3 py-1 rounded-full">
+          Book of the Month
+        </span>
       </div>
+
+      {/* Month pill tabs */}
+      {n > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none]">
+          {books.map((b, i) => (
+            <button
+              key={b.id}
+              onClick={() => goTo(i)}
+              className={`shrink-0 text-xs font-sans font-medium px-3 py-1.5 rounded-full border transition-all duration-200 whitespace-nowrap
+                ${
+                  i === activeIdx
+                    ? "bg-lime text-carbon border-lime"
+                    : "bg-transparent text-parchment/60 border-parchment/20 hover:text-parchment hover:border-parchment/50"
+                }`}
+            >
+              {monthLabel(b.month)}
+              {b.is_current && (
+                <span
+                  className={`ml-1.5 ${i === activeIdx ? "opacity-60" : "text-lime"}`}
+                >
+                  ·
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Carousel with flanking arrows */}
       <div className="flex items-center gap-3">
