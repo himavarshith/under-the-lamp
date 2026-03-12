@@ -908,7 +908,7 @@ function BookTab() {
     }));
     const { error } = await supabase
       .from("books")
-      .upsert(rows, { onConflict: "month" });
+      .upsert(rows, { onConflict: "month,title" });
     setBulkSaving(false);
     if (error) {
       toast(`Import failed: ${error.message}`, "error");
@@ -977,15 +977,21 @@ function BookTab() {
         month: form.month + "-01",
         is_current: form.setAsCurrent,
       },
-      { onConflict: "month" },
+      { onConflict: "month,title" },
     );
 
     if (!error) {
       if (form.setAsCurrent) {
+        // Mark all other months' books as not current
         await supabase
           .from("books")
           .update({ is_current: false })
           .neq("month", form.month + "-01");
+        // Ensure all books of this month are marked current
+        await supabase
+          .from("books")
+          .update({ is_current: true })
+          .eq("month", form.month + "-01");
       }
 
       setSaved(true);

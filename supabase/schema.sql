@@ -45,10 +45,15 @@ create table if not exists books (
   author text not null,
   cover_url text,
   description text,
-  month date not null unique,          -- first of month
+  month date not null,                 -- first of month (multiple books per month allowed)
   is_current boolean default false,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  unique(month, title)                 -- same title can't appear twice in the same month
 );
+
+-- Migration for existing deployments (run once in Supabase SQL editor):
+-- ALTER TABLE books DROP CONSTRAINT IF EXISTS books_month_key;
+-- ALTER TABLE books ADD CONSTRAINT books_month_title_key UNIQUE (month, title);
 
 -- 4. Photo Albums & Photos
 create table if not exists albums (

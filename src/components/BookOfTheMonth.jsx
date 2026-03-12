@@ -42,8 +42,21 @@ function monthLabel(monthStr) {
   });
 }
 
+// Group flat book list into slides: one slide per month (array of books)
+function groupByMonth(books) {
+  const map = {};
+  for (const b of books) {
+    const key = b.month.slice(0, 7); // YYYY-MM
+    if (!map[key]) map[key] = [];
+    map[key].push(b);
+  }
+  return Object.keys(map)
+    .sort()
+    .map((k) => map[k]);
+}
+
 export default function BookOfTheMonth() {
-  const [books, setBooks] = useState([]);
+  const [slides, setSlides] = useState([]); // each slide = array of books for that month
   const [activeIdx, setActiveIdx] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -59,16 +72,17 @@ export default function BookOfTheMonth() {
         .order("month", { ascending: true });
 
       const list = data?.length ? data : DEMO_BOOKS;
-      setBooks(list);
-      const currentIdx = list.findIndex((b) => b.is_current);
-      setActiveIdx(currentIdx >= 0 ? currentIdx : list.length - 1);
+      const grouped = groupByMonth(list);
+      setSlides(grouped);
+      const currentIdx = grouped.findIndex((s) => s.some((b) => b.is_current));
+      setActiveIdx(currentIdx >= 0 ? currentIdx : grouped.length - 1);
     }
     fetchBooks();
   }, []);
 
-  if (!books.length) return null;
+  if (!slides.length) return null;
 
-  const n = books.length;
+  const n = slides.length;
 
   function goTo(idx) {
     if (idx < 0 || idx >= n) return;
@@ -133,9 +147,9 @@ export default function BookOfTheMonth() {
       {/* Month pill tabs */}
       {n > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide [-ms-overflow-style:none] [scrollbar-width:none]">
-          {books.map((b, i) => (
+          {slides.map((s, i) => (
             <button
-              key={b.id}
+              key={s[0].month}
               onClick={() => goTo(i)}
               className={`shrink-0 text-xs font-sans font-medium px-3 py-1.5 rounded-full border transition-all duration-200 whitespace-nowrap
                 ${
@@ -144,8 +158,8 @@ export default function BookOfTheMonth() {
                     : "bg-transparent text-parchment/60 border-parchment/20 hover:text-parchment hover:border-parchment/50"
                 }`}
             >
-              {monthLabel(b.month)}
-              {b.is_current && (
+              {monthLabel(s[0].month)}
+              {s.some((b) => b.is_current) && (
                 <span
                   className={`ml-1.5 ${i === activeIdx ? "opacity-60" : "text-lime"}`}
                 >
@@ -188,49 +202,66 @@ export default function BookOfTheMonth() {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {books.map((b) => (
+            {slides.map((slideBooks) => (
               <div
-                key={b.id}
-                className="w-full shrink-0 flex flex-col md:flex-row gap-6 md:gap-8 items-start"
+                key={slideBooks[0].month}
+                className="w-full shrink-0 space-y-8"
               >
-                {/* Cover — centred on mobile */}
-                <div className="mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-2xl overflow-hidden border border-parchment/10">
-                  {b.cover_url ? (
-                    <img
-                      src={b.cover_url}
-                      alt={b.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-center p-4">
-                      <BookOpen className="w-10 h-10 text-lime/30 mx-auto mb-2" />
-                      <p className="text-xs text-parchment/30 font-sans">
-                        Cover
+                {/* Month + current badge */}
+                <p className="text-lime/70 text-xs uppercase tracking-widest font-display flex items-center gap-2">
+                  {monthLabel(slideBooks[0].month)}
+                  {slideBooks.some((b) => b.is_current) && (
+                    <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
+                      Current
+                    </span>
+                  )}
+                  {slideBooks.length > 1 && (
+                    <span className="text-parchment/40 text-[10px] font-sans normal-case tracking-normal">
+                      {slideBooks.length} co-picks
+                    </span>
+                  )}
+                </p>
+
+                {/* One row per book in this month */}
+                {slideBooks.map((b, bi) => (
+                  <div
+                    key={b.id}
+                    className={`flex flex-col md:flex-row gap-6 md:gap-8 items-start ${
+                      bi > 0 ? "pt-8 border-t border-parchment/10" : ""
+                    }`}
+                  >
+                    {/* Cover */}
+                    <div className="mx-auto md:mx-0 w-44 h-60 md:w-40 md:h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-2xl overflow-hidden border border-parchment/10">
+                      {b.cover_url ? (
+                        <img
+                          src={b.cover_url}
+                          alt={b.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-center p-4">
+                          <BookOpen className="w-10 h-10 text-lime/30 mx-auto mb-2" />
+                          <p className="text-xs text-parchment/30 font-sans">
+                            Cover
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug">
+                        {b.title}
+                      </h3>
+                      <p className="text-parchment/50 text-sm mb-4 font-sans">
+                        by {b.author}
+                      </p>
+                      <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
+                        {b.description}
                       </p>
                     </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-lime/70 text-xs uppercase tracking-widest font-display mb-2 flex items-center gap-2">
-                    {monthLabel(b.month)}
-                    {b.is_current && (
-                      <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
-                        Current
-                      </span>
-                    )}
-                  </p>
-                  <h3 className="font-serif italic text-2xl md:text-3xl text-parchment mb-1 leading-snug">
-                    {b.title}
-                  </h3>
-                  <p className="text-parchment/50 text-sm mb-4 font-sans">
-                    by {b.author}
-                  </p>
-                  <p className="text-parchment/70 leading-relaxed font-sans text-sm md:text-base">
-                    {b.description}
-                  </p>
-                </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -268,11 +299,11 @@ export default function BookOfTheMonth() {
 
           {/* Dots */}
           <div className="flex items-center gap-1.5">
-            {books.map((_, i) => (
+            {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                aria-label={`Go to book ${i + 1}`}
+                aria-label={`Go to month ${i + 1}`}
                 className={`rounded-full transition-all duration-300 ${
                   i === activeIdx
                     ? "w-5 h-2 bg-lime"
