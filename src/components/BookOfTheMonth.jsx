@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -45,6 +45,11 @@ function monthLabel(monthStr) {
 export default function BookOfTheMonth() {
   const [books, setBooks] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const directionLocked = useRef(null);
 
   useEffect(() => {
     async function fetchBooks() {
@@ -63,7 +68,57 @@ export default function BookOfTheMonth() {
 
   if (!books.length) return null;
 
-  const book = books[activeIdx];
+  const n = books.length;
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= n) return;
+    setActiveIdx(idx);
+    setDragOffset(0);
+    setIsDragging(false);
+  }
+
+  function handleTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    directionLocked.current = null;
+    setDragOffset(0);
+  }
+
+  function handleTouchMove(e) {
+    if (touchStartX.current === null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+
+    if (!directionLocked.current && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+      directionLocked.current = Math.abs(dx) >= Math.abs(dy) ? "h" : "v";
+    }
+
+    if (directionLocked.current !== "h") return;
+
+    setIsDragging(true);
+    const atEdge =
+      (activeIdx === 0 && dx > 0) || (activeIdx === n - 1 && dx < 0);
+    setDragOffset(atEdge ? dx * 0.2 : dx);
+  }
+
+  function handleTouchEnd() {
+    if (directionLocked.current === "h") {
+      const THRESHOLD = 60;
+      if (dragOffset < -THRESHOLD && activeIdx < n - 1) {
+        goTo(activeIdx + 1);
+      } else if (dragOffset > THRESHOLD && activeIdx > 0) {
+        goTo(activeIdx - 1);
+      } else {
+        setDragOffset(0);
+        setIsDragging(false);
+      }
+    } else {
+      setDragOffset(0);
+      setIsDragging(false);
+    }
+    touchStartX.current = null;
+    directionLocked.current = null;
+  }
 
   return (
     <section className="bg-brand-blue rounded-3xl p-8 md:p-12 text-parchment">
@@ -77,10 +132,10 @@ export default function BookOfTheMonth() {
         </div>
 
         {/* Month picker dropdown */}
-        {books.length > 1 && (
+        {n > 1 && (
           <select
             value={activeIdx}
-            onChange={(e) => setActiveIdx(Number(e.target.value))}
+            onChange={(e) => goTo(Number(e.target.value))}
             className="bg-brand-blue-dark text-parchment text-xs rounded-lg px-3 py-1.5 border border-parchment/20
                        focus:outline-none focus:ring-2 focus:ring-lime/40 font-sans cursor-pointer"
           >
@@ -94,81 +149,115 @@ export default function BookOfTheMonth() {
         )}
       </div>
 
-      {/* Book card */}
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-        {/* Cover */}
-        <div className="w-40 h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-2xl overflow-hidden border border-parchment/10">
-          {book.cover_url ? (
-            <img
-              src={book.cover_url}
-              alt={book.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="text-center p-4">
-              <BookOpen className="w-10 h-10 text-lime/30 mx-auto mb-2" />
-              <p className="text-xs text-parchment/30 font-sans">Cover</p>
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="flex-1">
-          <p className="text-lime/70 text-xs uppercase tracking-widest font-display mb-2 flex items-center gap-2">
-            {monthLabel(book.month)}
-            {book.is_current && (
-              <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
-                Current
-              </span>
-            )}
-          </p>
-          <h3 className="font-serif italic text-3xl text-parchment mb-1 leading-snug">
-            {book.title}
-          </h3>
-          <p className="text-parchment/50 text-sm mb-4 font-sans">
-            by {book.author}
-          </p>
-          <p className="text-parchment/70 leading-relaxed font-sans">
-            {book.description}
-          </p>
-        </div>
-      </div>
-
-      {/* Prev / Next navigation */}
-      {books.length > 1 && (
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-parchment/10">
+      {/* Carousel with flanking arrows */}
+      <div className="flex items-center gap-3">
+        {/* Left arrow */}
+        {n > 1 && (
           <button
-            onClick={() => setActiveIdx((i) => Math.max(0, i - 1))}
+            onClick={() => goTo(activeIdx - 1)}
             disabled={activeIdx === 0}
-            className="flex items-center gap-2 text-sm text-parchment/60 hover:text-parchment disabled:opacity-20 transition font-sans"
+            aria-label="Previous book"
+            className="shrink-0 w-9 h-9 rounded-full border border-parchment/20 flex items-center justify-center
+                       text-parchment/60 hover:text-parchment hover:bg-parchment/10 hover:border-parchment/40
+                       disabled:opacity-20 transition-all duration-200"
           >
-            <ChevronLeft className="w-4 h-4" />
-            {activeIdx > 0 ? monthLabel(books[activeIdx - 1].month) : "Older"}
+            <ChevronLeft className="w-5 h-5" />
           </button>
+        )}
 
-          {/* Dot indicators */}
-          <div className="flex items-center gap-1.5">
-            {books.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveIdx(i)}
-                className={`rounded-full transition-all duration-300 ${i === activeIdx ? "w-5 h-2 bg-lime" : "w-2 h-2 bg-parchment/25 hover:bg-parchment/50"}`}
-              />
+        {/* Sliding track */}
+        <div className="flex-1 overflow-hidden">
+          <div
+            className="flex select-none"
+            style={{
+              transform: `translateX(calc(-${activeIdx * 100}% + ${dragOffset}px))`,
+              transition: isDragging
+                ? "none"
+                : "transform 350ms cubic-bezier(0.4, 0, 0.2, 1)",
+              willChange: "transform",
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {books.map((b) => (
+              <div
+                key={b.id}
+                className="w-full shrink-0 flex flex-col md:flex-row gap-8 items-start"
+              >
+                {/* Cover */}
+                <div className="w-40 h-56 bg-carbon-light rounded-xl flex items-center justify-center shrink-0 shadow-2xl overflow-hidden border border-parchment/10">
+                  {b.cover_url ? (
+                    <img
+                      src={b.cover_url}
+                      alt={b.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center p-4">
+                      <BookOpen className="w-10 h-10 text-lime/30 mx-auto mb-2" />
+                      <p className="text-xs text-parchment/30 font-sans">
+                        Cover
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-lime/70 text-xs uppercase tracking-widest font-display mb-2 flex items-center gap-2">
+                    {monthLabel(b.month)}
+                    {b.is_current && (
+                      <span className="bg-lime text-carbon px-2 py-0.5 rounded-full text-[10px] font-bold">
+                        Current
+                      </span>
+                    )}
+                  </p>
+                  <h3 className="font-serif italic text-3xl text-parchment mb-1 leading-snug">
+                    {b.title}
+                  </h3>
+                  <p className="text-parchment/50 text-sm mb-4 font-sans">
+                    by {b.author}
+                  </p>
+                  <p className="text-parchment/70 leading-relaxed font-sans">
+                    {b.description}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
+        </div>
 
+        {/* Right arrow */}
+        {n > 1 && (
           <button
-            onClick={() =>
-              setActiveIdx((i) => Math.min(books.length - 1, i + 1))
-            }
-            disabled={activeIdx === books.length - 1}
-            className="flex items-center gap-2 text-sm text-parchment/60 hover:text-parchment disabled:opacity-20 transition font-sans"
+            onClick={() => goTo(activeIdx + 1)}
+            disabled={activeIdx === n - 1}
+            aria-label="Next book"
+            className="shrink-0 w-9 h-9 rounded-full border border-parchment/20 flex items-center justify-center
+                       text-parchment/60 hover:text-parchment hover:bg-parchment/10 hover:border-parchment/40
+                       disabled:opacity-20 transition-all duration-200"
           >
-            {activeIdx < books.length - 1
-              ? monthLabel(books[activeIdx + 1].month)
-              : "Newer"}
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </button>
+        )}
+      </div>
+
+      {/* Dot indicators */}
+      {n > 1 && (
+        <div className="flex items-center justify-center gap-1.5 mt-6">
+          {books.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              aria-label={`Go to book ${i + 1}`}
+              className={`rounded-full transition-all duration-300 ${
+                i === activeIdx
+                  ? "w-5 h-2 bg-lime"
+                  : "w-2 h-2 bg-parchment/25 hover:bg-parchment/50"
+              }`}
+            />
+          ))}
         </div>
       )}
     </section>
