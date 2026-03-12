@@ -101,6 +101,15 @@ create policy "Anyone can join waitlist"
 create policy "Public read books"
   on books for select using (true);
 
+create policy "Public insert books"
+  on books for insert with check (true);
+
+create policy "Public update books"
+  on books for update using (true);
+
+create policy "Public delete books"
+  on books for delete using (true);
+
 create policy "Public read albums"
   on albums for select using (true);
 
