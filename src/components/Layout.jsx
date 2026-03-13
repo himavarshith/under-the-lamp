@@ -14,12 +14,12 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col bg-parchment-dark">
       {/* Header */}
       <header className="bg-brand-blue text-white">
-        <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
+        <div className="max-w-6xl mx-auto px-4 py-1 flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center group min-w-0 shrink-0">
             <img
               src="/UTL Secondary Logo.svg"
               alt="Under the Lamp"
-              className="h-20 md:h-28 w-auto brightness-0 invert"
+              className="h-14 md:h-20 w-auto brightness-0 invert"
             />
           </Link>
 
@@ -50,7 +50,7 @@ export default function Layout() {
 
       {/* Footer */}
       <footer className="bg-carbon text-white/50 py-10">
-        <div className="max-w-6xl mx-auto px-8 md:px-16 flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+        <div className="max-w-6xl mx-auto px-8 md:px-16 flex flex-row items-start justify-between gap-8">
           {/* Left: details */}
           <div className="flex flex-col gap-3">
             <p className="text-xs font-sans">
