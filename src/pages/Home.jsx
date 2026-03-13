@@ -84,8 +84,8 @@ function HeroCarousel() {
           Bangalore's read-along book club
         </div>
         <p className="text-white/70 text-xs font-sans text-center max-w-sm">
-          A discussion-driven book club where readers meet once a month to dive
-          deep into great stories.
+          A discussion-driven book club in Bangalore where readers meet once a
+          month to dive into interesting stories.
         </p>
       </div>
     </section>
