@@ -1,9 +1,10 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Camera, Home } from "lucide-react";
+import { Camera, Home, Instagram, Mail, Users } from "lucide-react";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/gallery", label: "Gallery", icon: Camera },
+  { to: "/join", label: "Waitlist", icon: Users },
 ];
 
 export default function Layout() {
@@ -12,22 +13,14 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-parchment-dark">
       {/* Header */}
-      <header className="bg-lime text-carbon">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-          <Link to="/" className="flex items-center gap-2.5 group min-w-0">
+      <header className="bg-brand-blue text-white">
+        <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-2">
+          <Link to="/" className="flex items-center group min-w-0 shrink-0">
             <img
-              src="/lamp.svg"
-              alt="Under the Lamp logo"
-              className="w-10 h-10 md:w-14 md:h-14 shrink-0"
+              src="/UTL Secondary Logo.svg"
+              alt="Under the Lamp"
+              className="h-16 md:h-24 w-auto brightness-0 invert"
             />
-            <div className="min-w-0">
-              <h1 className="text-sm md:text-base font-display font-bold tracking-wide text-carbon uppercase leading-tight truncate">
-                Under the Lamp
-              </h1>
-              <p className="text-[10px] md:text-xs text-carbon/40 tracking-widest uppercase font-sans truncate">
-                Book Club · Bangalore
-              </p>
-            </div>
           </Link>
 
           <nav className="flex items-center gap-1 shrink-0">
@@ -38,8 +31,8 @@ export default function Layout() {
                 className={`flex items-center gap-2 px-3 md:px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition
                   ${
                     pathname === to
-                      ? "bg-brand-blue text-white"
-                      : "text-carbon/70 hover:text-carbon hover:bg-lime-dark"
+                      ? "bg-lime text-carbon"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -56,21 +49,35 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-carbon text-parchment/40 py-8">
+      <footer className="bg-carbon text-white/50 py-10">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <img
-              src="/lamp.svg"
-              alt="Under the Lamp logo"
-              className="w-6 h-6 opacity-80"
-            />
-            <span className="font-display text-parchment text-sm uppercase tracking-widest font-bold">
-              Under the Lamp
-            </span>
-          </div>
-          <p className="text-xs font-sans">
+          <img
+            src="/UTL Secondary Logo.svg"
+            alt="Under the Lamp"
+            className="h-24 w-auto mx-auto mb-4 brightness-0 invert opacity-90"
+          />
+          <p className="text-xs font-sans mb-5">
             A read-along, discussion-driven book club in Bangalore.
           </p>
+          <div className="flex items-center justify-center gap-5">
+            <a
+              href="https://www.instagram.com/underthelamp.blr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs font-sans text-white/50 hover:text-white transition"
+            >
+              <Instagram className="w-4 h-4" />
+              @underthelamp.blr
+            </a>
+            <span className="text-white/20">·</span>
+            <a
+              href="mailto:underthelamp.blr@gmail.com"
+              className="flex items-center gap-1.5 text-xs font-sans text-white/50 hover:text-white transition"
+            >
+              <Mail className="w-4 h-4" />
+              underthelamp.blr@gmail.com
+            </a>
+          </div>
         </div>
       </footer>
     </div>

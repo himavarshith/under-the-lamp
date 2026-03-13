@@ -1,40 +1,102 @@
-import WaitlistForm from "../components/WaitlistForm";
+import { useState, useEffect, useRef } from "react";
 import BookOfTheMonth from "../components/BookOfTheMonth";
-import { Lamp, Users, BookOpen, Heart, MapPin, Calendar } from "lucide-react";
+import { Users, BookOpen, Heart, MapPin } from "lucide-react";
+import { supabase } from "../lib/supabase";
+
+// Auto-scrolling photo carousel with logo overlay
+function HeroCarousel() {
+  const [photos, setPhotos] = useState([]);
+  const trackRef = useRef(null);
+  const animRef = useRef(null);
+  const posRef = useRef(0);
+
+  useEffect(() => {
+    async function fetchPhotos() {
+      const { data: albums } = await supabase
+        .from("albums")
+        .select("id")
+        .order("month", { ascending: false })
+        .limit(6);
+      if (!albums?.length) return;
+      const ids = albums.map((a) => a.id);
+      const { data: photoData } = await supabase
+        .from("photos")
+        .select("id, url")
+        .in("album_id", ids)
+        .limit(20);
+      if (photoData?.length) setPhotos(photoData);
+    }
+    fetchPhotos();
+  }, []);
+
+  // Continuous pixel-by-pixel scroll
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || photos.length === 0) return;
+    const speed = 0.5; // px per frame
+
+    function step() {
+      posRef.current += speed;
+      const halfWidth = track.scrollWidth / 2;
+      if (posRef.current >= halfWidth) posRef.current = 0;
+      track.style.transform = `translateX(-${posRef.current}px)`;
+      animRef.current = requestAnimationFrame(step);
+    }
+    animRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [photos]);
+
+  const displayPhotos = photos.length ? [...photos, ...photos] : [];
+
+  return (
+    <section className="relative bg-carbon overflow-hidden h-[70vw] max-h-[560px] min-h-[260px]">
+      {/* Scrolling photo strip */}
+      {displayPhotos.length > 0 && (
+        <div
+          ref={trackRef}
+          className="absolute inset-0 flex gap-2 will-change-transform"
+          style={{ width: "max-content" }}
+        >
+          {displayPhotos.map((p, i) => (
+            <img
+              key={`${p.id}-${i}`}
+              src={p.url}
+              alt=""
+              className="h-full w-auto object-cover opacity-60"
+              draggable={false}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Dark gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/30 to-transparent" />
+
+      {/* Main logo centered + bottom-anchored */}
+      <div className="absolute inset-x-0 bottom-8 md:bottom-12 flex flex-col items-center gap-3 px-4">
+        <img
+          src="/UTL Main Logo.svg"
+          alt="Under the Lamp"
+          className="w-56 md:w-80 lg:w-96 opacity-90 brightness-0 invert"
+        />
+        <div className="flex items-center gap-2 text-white/50 text-xs uppercase tracking-widest font-sans">
+          <MapPin className="w-3 h-3" />
+          Bangalore's read-along book club
+        </div>
+        <p className="text-white/70 text-sm font-sans text-center max-w-sm">
+          A discussion-driven book club where readers meet once a month to dive
+          deep into great stories.
+        </p>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   return (
     <div>
-      {/* Hero */}
-      <section className="relative bg-carbon overflow-hidden">
-        <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-36 text-center">
-          <div className="inline-flex items-center gap-2 text-parchment/50 text-xs uppercase tracking-widest px-4 py-2 rounded-full mb-10 border border-parchment/20">
-            <MapPin className="w-3.5 h-3.5" />
-            Bangalore's read-along book club
-          </div>
-
-          <h1 className="font-display text-6xl md:text-8xl text-lime mb-2 leading-none uppercase font-bold tracking-tight">
-            Under the Lamp
-          </h1>
-
-          <p className="font-serif italic text-parchment/50 text-2xl md:text-3xl mb-12">
-            book club
-          </p>
-
-          <p className="text-parchment/70 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-sans">
-            A discussion-driven book club where readers meet once a month to
-            dive deep into great stories.
-          </p>
-
-          <a
-            href="#join"
-            className="inline-flex items-center gap-2 border-2 border-lime text-lime hover:bg-lime hover:text-carbon
-                       font-display font-bold uppercase tracking-wider px-8 py-4 rounded-xl transition"
-          >
-            Join the Waitlist
-          </a>
-        </div>
-      </section>
+      {/* Hero — photo carousel */}
+      <HeroCarousel />
 
       {/* About */}
       <section className="max-w-6xl mx-auto px-4 py-20">
@@ -75,31 +137,6 @@ export default function Home() {
 
         {/* Book of the Month */}
         <BookOfTheMonth />
-      </section>
-
-      {/* Waitlist Sign-Up */}
-      <section id="join" className="bg-lime py-20">
-        <div className="max-w-md mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="font-serif italic text-3xl mb-3 text-carbon">
-              Join the Waitlist
-            </h2>
-            <p className="text-carbon/70 text-sm font-sans">
-              We're currently at capacity, but we'd love to have you join us
-              soon. Add your name and we'll reach out as soon as a spot opens
-              up.
-            </p>
-            <p className="text-carbon/50 text-xs mt-2 font-sans leading-relaxed">
-              If you're invited but can't attend, just let us know — you'll stay
-              on the list. Decline twice and we'll move you down so others get a
-              chance too.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-parchment-dark">
-            <WaitlistForm />
-          </div>
-        </div>
       </section>
     </div>
   );

@@ -1,9 +1,10 @@
-import { Routes, Route } from 'react-router-dom'
-import Layout from './components/Layout'
-import Home from './pages/Home'
-import Gallery from './pages/Gallery'
-import Admin from './pages/Admin'
-import RSVP from './pages/RSVP'
+import { Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import Gallery from "./pages/Gallery";
+import Admin from "./pages/Admin";
+import RSVP from "./pages/RSVP";
+import Join from "./pages/Join";
 
 export default function App() {
   return (
@@ -11,9 +12,10 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/gallery" element={<Gallery />} />
+        <Route path="/join" element={<Join />} />
         <Route path="/admin" element={<Admin />} />
       </Route>
       <Route path="/rsvp/:token" element={<RSVP />} />
     </Routes>
-  )
+  );
 }
