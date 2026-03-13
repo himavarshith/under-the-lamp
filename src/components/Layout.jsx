@@ -61,21 +61,21 @@ export default function Layout() {
           </p>
           <div className="flex items-center justify-center gap-5">
             <a
-              href="https://www.instagram.com/underthelamp.blr"
+              href="https://www.instagram.com/underthelamp_/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-xs font-sans text-white/50 hover:text-white transition"
             >
               <Instagram className="w-4 h-4" />
-              @underthelamp.blr
+              @underthelamp_
             </a>
             <span className="text-white/20">·</span>
             <a
-              href="mailto:underthelamp.blr@gmail.com"
+              href="mailto:underthelamp.contact@gmail.com"
               className="flex items-center gap-1.5 text-xs font-sans text-white/50 hover:text-white transition"
             >
               <Mail className="w-4 h-4" />
-              underthelamp.blr@gmail.com
+              underthelamp.contact@gmail.com
             </a>
           </div>
         </div>
