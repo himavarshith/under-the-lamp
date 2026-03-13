@@ -19,7 +19,7 @@ export default function Layout() {
             <img
               src="/UTL Secondary Logo.svg"
               alt="Under the Lamp"
-              className="h-16 md:h-24 w-auto brightness-0 invert"
+              className="h-20 md:h-28 w-auto brightness-0 invert"
             />
           </Link>
 
@@ -50,16 +50,13 @@ export default function Layout() {
 
       {/* Footer */}
       <footer className="bg-carbon text-white/50 py-10">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <img
-            src="/UTL Secondary Logo.svg"
-            alt="Under the Lamp"
-            className="h-24 w-auto mx-auto mb-4 brightness-0 invert opacity-90"
-          />
-          <p className="text-xs font-sans mb-5">
-            A read-along, discussion-driven book club in Bangalore.
-          </p>
-          <div className="flex items-center justify-center gap-5">
+        <div className="max-w-6xl mx-auto px-8 md:px-16 flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+          {/* Left: details */}
+          <div className="flex flex-col gap-3">
+            <p className="text-xs font-sans">
+              A read-along, discussion-driven book club in Bangalore.
+            </p>
+            <div className="w-8 border-t border-white/20" />
             <a
               href="https://www.instagram.com/underthelamp_/"
               target="_blank"
@@ -69,15 +66,22 @@ export default function Layout() {
               <Instagram className="w-4 h-4" />
               @underthelamp_
             </a>
-            <span className="text-white/20">·</span>
-            <a
-              href="mailto:underthelamp.contact@gmail.com"
-              className="flex items-center gap-1.5 text-xs font-sans text-white/50 hover:text-white transition"
-            >
-              <Mail className="w-4 h-4" />
-              underthelamp.contact@gmail.com
-            </a>
+            <p className="text-xs font-sans">
+              Write to us:{" "}
+              <a
+                href="mailto:underthelamp.contact@gmail.com"
+                className="hover:text-white transition"
+              >
+                underthelamp.contact@gmail.com
+              </a>
+            </p>
           </div>
+          {/* Right: logo */}
+          <img
+            src="/UTL Secondary Logo.svg"
+            alt="Under the Lamp"
+            className="h-24 w-auto brightness-0 invert opacity-90 shrink-0"
+          />
         </div>
       </footer>
     </div>

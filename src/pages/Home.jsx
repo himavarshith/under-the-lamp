@@ -73,17 +73,17 @@ function HeroCarousel() {
       <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/30 to-transparent" />
 
       {/* Main logo centered + bottom-anchored */}
-      <div className="absolute inset-x-0 bottom-8 md:bottom-12 flex flex-col items-center gap-3 px-4">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 pb-8">
         <img
           src="/UTL Main Logo.svg"
           alt="Under the Lamp"
-          className="w-56 md:w-80 lg:w-96 opacity-90 brightness-0 invert"
+          className="w-56 md:w-96 lg:w-[28rem] opacity-90 brightness-0 invert"
         />
         <div className="flex items-center gap-2 text-white/50 text-xs uppercase tracking-widest font-sans">
           <MapPin className="w-3 h-3" />
           Bangalore's read-along book club
         </div>
-        <p className="text-white/70 text-sm font-sans text-center max-w-sm">
+        <p className="text-white/70 text-xs font-sans text-center max-w-sm">
           A discussion-driven book club where readers meet once a month to dive
           deep into great stories.
         </p>
